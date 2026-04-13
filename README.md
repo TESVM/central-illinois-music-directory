@@ -1,6 +1,21 @@
-# Champaign County Church Directory
+# Central Illinois Music Directory
 
-Production-style Next.js directory for churches in Champaign County, Illinois. The app includes public city and church pages, a searchable directory, public submission and claim forms, an admin review workflow, Prisma models, seed data, and a review-first weekly scan architecture.
+Public-facing musician directory for Central Illinois, especially Champaign-Urbana. This app helps pastors, churches, worship leaders, and event planners find musicians, and it helps musicians create public-facing ministry profiles.
+
+GitHub:
+- https://github.com/TESVM/central-illinois-music-directory
+
+## What This Site Includes
+
+- Musician-focused homepage with guided search
+- Browse musicians page with filters and sorting
+- Individual musician profile pages
+- Multi-step create-profile flow
+- Musician dashboard
+- Church/pastor request page
+- FAQ, about, contact, terms, and moderation pages
+- Instrument photo gallery
+- Cross-link back to the church directory
 
 ## Stack
 
@@ -8,9 +23,31 @@ Production-style Next.js directory for churches in Champaign County, Illinois. T
 - TypeScript
 - Tailwind CSS
 - Prisma ORM
-- PostgreSQL
-- NextAuth sample admin auth
-- Vercel-ready cron endpoint
+- PostgreSQL-ready schema
+- NextAuth scaffolding
+
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Local URL:
+- `http://localhost:3005`
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and update values as needed.
+
+Important values:
+
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
+- `NEXT_PUBLIC_CHURCH_DIRECTORY_URL`
+- `NEXT_PUBLIC_MUSICIAN_DIRECTORY_URL`
+- `CRON_SECRET`
 
 ## Project Structure
 
@@ -18,84 +55,54 @@ Production-style Next.js directory for churches in Champaign County, Illinois. T
 app/
   about/
   admin/
-  api/cron/weekly-scan/
-  churches/[slug]/
-  cities/[slug]/
-  claim/
+  api/
+  church-search-request/
   contact/
-  directory/
-  search/
-  submit/
+  create-profile/
+  dashboard/
+  faq/
+  musicians/[slug]/
+  musicians/
+  terms-privacy/
 components/
-  admin/
-  directory/
-  forms/
   layout/
+  site/
   ui/
 lib/
-  auth.ts
+  site-data.ts
+  utils.ts
   data/
   prisma/
-  scan/
-  validation/
 prisma/
   schema.prisma
   seed.ts
 ```
 
-## Setup
+## Accessibility
 
-1. Install dependencies.
-   `npm install`
-2. Copy environment variables.
-   `cp .env.example .env.local`
-3. Set `DATABASE_URL`, `NEXTAUTH_SECRET`, `CRON_SECRET`, and your production URLs.
-4. Generate Prisma client.
-   `npm run prisma:generate`
-5. Run migrations.
-   `npm run prisma:migrate`
-6. Seed the database.
-   `npm run prisma:seed`
-7. Start development.
-   `npm run dev`
+This repo was updated to better align with WCAG 2.1 Level AA patterns and Illinois accessibility expectations.
 
-## Weekly Scan Workflow
+Implemented examples:
 
-The scheduled job is exposed at `GET /api/cron/weekly-scan`.
+- skip link
+- stronger focus states
+- reduced-motion support
+- clearer helper text
+- mobile-friendly navigation
+- labeled controls and status messaging
+- photo alt text for instrument imagery
 
-- Run it weekly from Vercel Cron.
-- Authenticate with `Authorization: Bearer $CRON_SECRET`.
-- Scan official church websites first.
-- Check public social profiles and directory sources second.
-- Create suggested changes with source URLs and confidence scores.
-- Route every change into an admin review queue.
-- Avoid direct overwrite unless confidence is extremely high and explicitly allowed by policy.
-
-Recommended Vercel cron:
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/weekly-scan",
-      "schedule": "0 8 * * 1"
-    }
-  ]
-}
-```
+See:
+- [ACCESSIBILITY_NOTES.md](./ACCESSIBILITY_NOTES.md)
 
 ## Deployment Notes
 
-- Deploy to Vercel.
-- Provision PostgreSQL through Vercel Postgres, Neon, Supabase, or another managed provider.
-- Set `NEXTAUTH_URL` to the production origin.
-- Add `CRON_SECRET` in Vercel environment settings.
-- Attach the cron schedule in `vercel.json` or Vercel project settings.
-- Replace the sample credentials auth flow in `lib/auth.ts` with a real Prisma-backed NextAuth adapter before production launch.
+- Designed for Vercel deployment
+- Uses local/mock profile data for the directory experience
+- Production launch should include a real data layer, moderation workflow, and audited environment settings
 
-## Production Follow-up
+## Companion Project
 
-- Wire the mock query layer to Prisma queries.
-- Add file upload handling for church logos and featured images.
-- Replace placeholder URLs with verified real listings.
-- Add duplicate-detection heuristics using address, phone, and normalized website hostname matching.
+If users want to browse churches first, use the companion repo:
+
+- https://github.com/TESVM/champaign-county-church-directory
