@@ -6,8 +6,10 @@ import {
   contactSchema,
   claimSchema,
   gigRequestSchema,
+  musicianProfileSchema,
   submitListingSchema,
-  type GigRequestInput
+  type GigRequestInput,
+  type MusicianProfileInput
 } from "@/lib/validation/forms";
 import { computeQuote, enforceFloor, quoteToPlainText } from "@/lib/rates";
 import { sendGigNotification } from "@/lib/notify";
@@ -17,12 +19,112 @@ import {
   saveSiteContentRecord
 } from "@/lib/data/admin-store";
 
-export async function submitContactAction(formData: FormData) {
-  contactSchema.parse({
+export type FormResult = {
+  status: "idle" | "success" | "error";
+  message: string;
+  /** False when no mail provider is configured, so the UI can say so plainly. */
+  delivered?: boolean;
+};
+
+/**
+ * Contact form. Previously this validated the input and then discarded it —
+ * every message sent through the site was silently lost.
+ */
+export async function submitContactAction(
+  _previous: FormResult,
+  formData: FormData
+): Promise<FormResult> {
+  const parsed = contactSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
     message: formData.get("message")
   });
+
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message:
+        "Please check the form: a name, a valid email address, and a message of at least 10 characters are required."
+    };
+  }
+
+  const { name, email, message } = parsed.data;
+
+  console.info(
+    "[contact]",
+    JSON.stringify({ receivedAt: new Date().toISOString(), name, email, message })
+  );
+
+  const delivery = await sendGigNotification({
+    subject: `Contact form — ${name}`,
+    body: [`From: ${name} <${email}>`, "", message].join("\n"),
+    replyTo: email
+  });
+
+  return {
+    status: "success",
+    message: delivery.delivered
+      ? "Thanks — your message is on its way. We'll reply to the email you gave us."
+      : "Thanks — we've received your message.",
+    delivered: delivery.delivered
+  };
+}
+
+/**
+ * Musician profile submission.
+ *
+ * The previous version cleared a localStorage draft and told the musician the
+ * profile was "submitted successfully" without sending it anywhere.
+ */
+export async function submitMusicianProfileAction(
+  input: MusicianProfileInput
+): Promise<FormResult> {
+  const parsed = musicianProfileSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: "Some required details are missing or too short. Check the highlighted steps."
+    };
+  }
+
+  const profile = parsed.data;
+
+  console.info(
+    "[musician-profile]",
+    JSON.stringify({ receivedAt: new Date().toISOString(), ...profile })
+  );
+
+  const delivery = await sendGigNotification({
+    subject: `New musician profile — ${profile.fullName}`,
+    body: [
+      `Name:        ${profile.fullName}`,
+      `Role:        ${profile.primaryRole}`,
+      `City:        ${profile.city}`,
+      `Experience:  ${profile.yearsExperience}`,
+      `Genres:      ${profile.genres}`,
+      `Availability:${profile.availability || " not given"}`,
+      `Email:       ${profile.email}`,
+      `Phone:       ${profile.phone}`,
+      `WhatsApp:    ${profile.whatsapp || "not given"}`,
+      `Facebook:    ${profile.facebook || "not given"}`,
+      `Instagram:   ${profile.instagram || "not given"}`,
+      `LinkedIn:    ${profile.linkedin || "not given"}`,
+      `Churches:    ${profile.churches || "not given"}`,
+      `Events:      ${profile.events || "not given"}`,
+      `Media:       ${profile.media || "not given"}`,
+      "",
+      "Bio:",
+      profile.bio
+    ].join("\n"),
+    replyTo: profile.email
+  });
+
+  return {
+    status: "success",
+    message: "Profile received. We'll review it and get in touch before it goes live.",
+    delivered: delivery.delivered
+  };
 }
 
 export async function submitListingAction(formData: FormData) {

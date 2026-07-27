@@ -27,6 +27,12 @@ export type Musician = {
   distanceMiles: number;
   updatedAt: string;
   featured?: boolean;
+  /**
+   * Sample listing, not a real person. Contact details are placeholders
+   * (example.com / 555 numbers). Anything user-facing must label these
+   * clearly so nobody tries to book them.
+   */
+  example?: boolean;
 };
 
 export const musicians: Musician[] = [
@@ -57,7 +63,8 @@ export const musicians: Musician[] = [
     accentClass: "bg-[linear-gradient(135deg,#1f5f63,#2f8f88_52%,#f0c47b)]",
     distanceMiles: 4,
     updatedAt: "2026-04-09T18:00:00.000Z",
-    featured: true
+    featured: true,
+    example: true
   },
   {
     slug: "isaiah-carter",
@@ -86,7 +93,8 @@ export const musicians: Musician[] = [
     accentClass: "bg-[linear-gradient(135deg,#102327,#1f5f63_45%,#6ba292)]",
     distanceMiles: 2,
     updatedAt: "2026-04-12T14:00:00.000Z",
-    featured: true
+    featured: true,
+    example: true
   },
   {
     slug: "elena-vasquez",
@@ -115,7 +123,8 @@ export const musicians: Musician[] = [
     accentClass: "bg-[linear-gradient(135deg,#8b5e3c,#d59b63_48%,#f5d8b4)]",
     distanceMiles: 7,
     updatedAt: "2026-04-07T10:00:00.000Z",
-    featured: true
+    featured: true,
+    example: true
   },
   {
     slug: "caleb-nguyen",
@@ -143,7 +152,8 @@ export const musicians: Musician[] = [
     media: ["Ambient intro loop clip", "Team rehearsal board", "Electric guitar patch list"],
     accentClass: "bg-[linear-gradient(135deg,#12363e,#325d6b_45%,#f28b66)]",
     distanceMiles: 14,
-    updatedAt: "2026-04-10T08:30:00.000Z"
+    updatedAt: "2026-04-10T08:30:00.000Z",
+    example: true
   },
   {
     slug: "ruth-daniels",
@@ -171,7 +181,8 @@ export const musicians: Musician[] = [
     media: ["Choir clinic handout", "Section rehearsal photo", "Anniversary service sample"],
     accentClass: "bg-[linear-gradient(135deg,#6f5d45,#967a53_45%,#cfb089)]",
     distanceMiles: 19,
-    updatedAt: "2026-04-06T13:00:00.000Z"
+    updatedAt: "2026-04-06T13:00:00.000Z",
+    example: true
   },
   {
     slug: "jonah-williams",
@@ -199,7 +210,8 @@ export const musicians: Musician[] = [
     media: ["Live drums mix sample", "Rehearsal setup photo", "Percussion loop clip"],
     accentClass: "bg-[linear-gradient(135deg,#3e4a5d,#506982_45%,#8eb8d8)]",
     distanceMiles: 5,
-    updatedAt: "2026-04-13T09:00:00.000Z"
+    updatedAt: "2026-04-13T09:00:00.000Z",
+    example: true
   }
 ];
 

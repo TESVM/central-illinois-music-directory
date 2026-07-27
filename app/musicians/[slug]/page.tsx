@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { CalendarDays, Mail, MapPin, Phone } from "lucide-react";
+import { ExampleBadge, ExampleNotice } from "@/components/site/example-notice";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { enforceFloor, formatRate, isFloorRate } from "@/lib/rates";
@@ -52,6 +53,7 @@ export default async function MusicianProfilePage({ params }: Props) {
                 <p className="text-sm text-ink-subtle">{musician.city}, Illinois</p>
                 <h1 className="mt-1 text-display-lg font-semibold text-ink">{musician.name}</h1>
                 <p className="mt-1 text-tagline font-normal text-ink-muted">{musician.primaryRole}</p>
+                {musician.example && <ExampleBadge className="mt-3" />}
               </div>
             </div>
 
@@ -63,14 +65,29 @@ export default async function MusicianProfilePage({ params }: Props) {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild>
-              <Link href="/request-musician">Request this musician</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href={`mailto:${musician.email}`}>Contact by email</Link>
-            </Button>
-          </div>
+          {/*
+            Sample listings must not offer a contact button — the address is a
+            placeholder, and mailing it would go nowhere.
+          */}
+          {musician.example ? (
+            <>
+              <ExampleNotice className="mt-8" />
+              <div className="mt-5">
+                <Button asChild>
+                  <Link href="/request-musician">Tell us what you need</Link>
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href="/request-musician">Request this musician</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href={`mailto:${musician.email}`}>Contact by email</Link>
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-8 p-8 lg:grid-cols-[0.72fr_0.28fr]">
@@ -144,29 +161,44 @@ export default async function MusicianProfilePage({ params }: Props) {
                   <MapPin className="mt-1 h-4 w-4 text-brand-700" />
                   <span>{musician.city}</span>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Phone className="mt-1 h-4 w-4 text-brand-700" />
-                  <span>{musician.phone}</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Mail className="mt-1 h-4 w-4 text-brand-700" />
-                  <span>{musician.email}</span>
-                </div>
+                {/* Placeholder contact details are withheld rather than shown as real. */}
+                {musician.example ? (
+                  <div className="flex items-start gap-3">
+                    <Mail className="mt-1 h-4 w-4 text-ink-subtle" />
+                    <span className="text-ink-subtle">
+                      Contact details are shown once a real musician claims this listing.
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <Phone className="mt-1 h-4 w-4 text-brand-700" />
+                      <span>{musician.phone}</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Mail className="mt-1 h-4 w-4 text-brand-700" />
+                      <span>{musician.email}</span>
+                    </div>
+                  </>
+                )}
                 <p><strong>Availability:</strong> {musician.availability}</p>
                 <p><strong>Styles:</strong> {musician.genres.join(", ")}</p>
                 <p><strong>Church experience:</strong> {musician.churchExperience}</p>
               </div>
             </Card>
 
-            <Card className="p-6">
-              <h2 className="text-tagline font-semibold text-ink">Social links</h2>
-              <div className="mt-5 space-y-3 text-sm text-brand-700">
-                <a className="block underline-offset-4 hover:underline focus-ring" href={musician.facebook}>Facebook</a>
-                <a className="block underline-offset-4 hover:underline focus-ring" href={musician.instagram}>Instagram</a>
-                <a className="block underline-offset-4 hover:underline focus-ring" href={musician.linkedin}>LinkedIn</a>
-                <a className="block underline-offset-4 hover:underline focus-ring" href={`https://wa.me/${musician.whatsapp.replace(/\D/g, "")}`}>WhatsApp</a>
-              </div>
-            </Card>
+            {/* Sample profiles carry placeholder social URLs that resolve to nothing. */}
+            {!musician.example && (
+              <Card className="p-6">
+                <h2 className="text-tagline font-semibold text-ink">Social links</h2>
+                <div className="mt-5 space-y-3 text-sm text-brand-700">
+                  <a className="block underline-offset-4 hover:underline focus-ring" href={musician.facebook}>Facebook</a>
+                  <a className="block underline-offset-4 hover:underline focus-ring" href={musician.instagram}>Instagram</a>
+                  <a className="block underline-offset-4 hover:underline focus-ring" href={musician.linkedin}>LinkedIn</a>
+                  <a className="block underline-offset-4 hover:underline focus-ring" href={`https://wa.me/${musician.whatsapp.replace(/\D/g, "")}`}>WhatsApp</a>
+                </div>
+              </Card>
+            )}
           </aside>
         </div>
       </section>

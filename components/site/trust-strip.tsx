@@ -1,4 +1,5 @@
 import { BadgeCheck, HandCoins, MapPin, ShieldCheck } from "lucide-react";
+import { allListingsAreExamples, realMusicianCount } from "@/components/site/example-notice";
 import { FLOOR_RATE, formatCurrency } from "@/lib/rates";
 import { musicians } from "@/lib/site-data";
 
@@ -14,11 +15,22 @@ export function TrustStrip() {
   );
 
   const points = [
-    {
-      icon: BadgeCheck,
-      title: `${musicians.length} vetted musicians`,
-      body: `Every profile is reviewed before it goes live. Average ${averageYears} years of ministry experience.`
-    },
+    /*
+      While the directory only holds sample listings, this must not claim a
+      roster that does not exist. It switches to the real claim automatically
+      once an actual musician is added.
+    */
+    allListingsAreExamples
+      ? {
+          icon: BadgeCheck,
+          title: "Personally matched",
+          body: "The directory is new. Tell us what your service needs and we'll find the right local musician for it."
+        }
+      : {
+          icon: BadgeCheck,
+          title: `${realMusicianCount} vetted musicians`,
+          body: `Every profile is reviewed before it goes live. Average ${averageYears} years of ministry experience.`
+        },
     {
       icon: HandCoins,
       title: `${formatCurrency(FLOOR_RATE)} an hour minimum`,

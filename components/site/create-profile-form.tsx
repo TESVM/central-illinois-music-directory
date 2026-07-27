@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { submitMusicianProfileAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,6 +57,9 @@ export function CreateProfileForm() {
   const [step, setStep] = useState(0);
   const [state, setState] = useState<FormState>(defaultState);
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [delivered, setDelivered] = useState(true);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("musician-profile-draft");
@@ -100,13 +104,70 @@ export function CreateProfileForm() {
     setStep((current) => Math.max(current - 1, 0));
   }
 
-  function submitForm() {
-    window.localStorage.removeItem("musician-profile-draft");
-    setMessage("Profile submitted successfully. A moderator will review it before publishing.");
+  async function submitForm() {
+    setSubmitting(true);
+    setMessage("");
+    try {
+      const result = await submitMusicianProfileAction({
+        fullName: state.fullName,
+        primaryRole: state.primaryRole,
+        city: state.city,
+        availability: state.availability,
+        yearsExperience: state.yearsExperience,
+        genres: state.genres,
+        bio: state.bio,
+        churches: state.churches,
+        events: state.events,
+        phone: state.phone,
+        email: state.email,
+        whatsapp: state.whatsapp,
+        facebook: state.facebook,
+        instagram: state.instagram,
+        linkedin: state.linkedin,
+        media: state.media
+      });
+
+      if (result.status === "error") {
+        setMessage(result.message);
+        return;
+      }
+
+      // Only clear the draft once the server has actually accepted it.
+      window.localStorage.removeItem("musician-profile-draft");
+      setDelivered(result.delivered !== false);
+      setSubmitted(true);
+    } catch {
+      setMessage(
+        "That didn't send. Check your connection and try again, or email us at hello@centralilmusicministry.com."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="rounded-lg border border-line bg-surface p-8 text-center sm:p-12">
+        <h2 className="text-display-md font-semibold text-ink">Profile received</h2>
+        <p className="mx-auto mt-3 max-w-md text-body text-ink-muted">
+          Thanks, {state.fullName || "friend"}. We&apos;ll review your details and get in touch at{" "}
+          {state.email} before your profile goes live.
+        </p>
+        {delivered === false && (
+          <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-ink-subtle">
+            To be sure it reaches us, you can also email a copy to{" "}
+            <a href="mailto:hello@centralilmusicministry.com" className="text-brand-700 underline">
+              hello@centralilmusicministry.com
+            </a>
+            .
+          </p>
+        )}
+      </div>
+    );
   }
 
   return (
-    <div className="rounded-[32px] border border-line bg-white/90 p-6 shadow-card sm:p-8">
+    <div className="rounded-lg border border-line bg-surface p-6 sm:p-8">
       <div aria-label="Progress" className="mb-8">
         <div className="flex flex-wrap gap-3">
           {steps.map((label, index) => (
@@ -227,8 +288,8 @@ export function CreateProfileForm() {
             Next
           </Button>
         ) : (
-          <Button type="button" onClick={submitForm}>
-            Submit profile
+          <Button type="button" onClick={submitForm} disabled={submitting}>
+            {submitting ? "Sending…" : "Submit profile"}
           </Button>
         )}
         <Button type="button" variant="ghost" onClick={saveDraft}>

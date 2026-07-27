@@ -5,6 +5,7 @@ import { HeroSearch } from "@/components/site/hero-search";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/layout/section-heading";
+import { allListingsAreExamples, realMusicianCount } from "@/components/site/example-notice";
 import { FLOOR_RATE, formatCurrency } from "@/lib/rates";
 import { getFeaturedMusicians, instrumentPhotos, musicians, testimonials } from "@/lib/site-data";
 import { churchDirectoryUrl } from "@/lib/utils";
@@ -90,7 +91,9 @@ export default function HomePage() {
               cannot drift into being untrue as the directory grows.
             */}
             {[
-              [`${musicians.length}`, "Vetted musicians, each profile reviewed"],
+              allListingsAreExamples
+                ? ["New", "Directory launching — requests matched personally"]
+                : [`${realMusicianCount}`, "Vetted musicians, each profile reviewed"],
               [formatCurrency(FLOOR_RATE), "Minimum hourly rate, always"],
               [`${new Set(musicians.map((musician) => musician.city)).size}`, "Cities across Central Illinois"]
             ].map(([value, label]) => (

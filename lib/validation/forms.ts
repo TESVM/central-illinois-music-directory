@@ -18,6 +18,27 @@ export const submitListingSchema = z.object({
   description: z.string().min(20)
 });
 
+export const musicianProfileSchema = z.object({
+  fullName: z.string().min(2),
+  primaryRole: z.string().min(2),
+  city: z.string().min(2),
+  availability: z.string().optional().or(z.literal("")),
+  yearsExperience: z.string().min(1),
+  genres: z.string().min(2),
+  bio: z.string().min(20),
+  churches: z.string().optional().or(z.literal("")),
+  events: z.string().optional().or(z.literal("")),
+  phone: z.string().min(7),
+  email: z.string().email(),
+  whatsapp: z.string().optional().or(z.literal("")),
+  facebook: z.string().optional().or(z.literal("")),
+  instagram: z.string().optional().or(z.literal("")),
+  linkedin: z.string().optional().or(z.literal("")),
+  media: z.string().optional().or(z.literal(""))
+});
+
+export type MusicianProfileInput = z.infer<typeof musicianProfileSchema>;
+
 export const gigRequestSchema = z.object({
   organization: z.string().min(2),
   contactName: z.string().min(2),

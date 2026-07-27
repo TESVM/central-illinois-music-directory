@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { MapPin, CalendarDays, ShieldCheck } from "lucide-react";
+import { ExampleBadge, ExampleNotice } from "@/components/site/example-notice";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { enforceFloor, formatRate, isFloorRate } from "@/lib/rates";
@@ -103,6 +104,8 @@ export function MusicianBrowser({ musicians, initialFilters }: Props) {
       </Card>
 
       <section aria-labelledby="results-heading">
+        <ExampleNotice className="mb-5" />
+
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <p id="results-heading" aria-live="polite" className="text-sm text-ink-subtle">
             {filtered.length} musician{filtered.length === 1 ? "" : "s"} found
@@ -156,6 +159,7 @@ export function MusicianBrowser({ musicians, initialFilters }: Props) {
                       <div>
                         <h2 className="text-tagline font-semibold text-ink">{musician.name}</h2>
                         <p className="text-sm text-ink-subtle">{musician.primaryRole}</p>
+                        {musician.example && <ExampleBadge className="mt-2" />}
                       </div>
                     </div>
 
