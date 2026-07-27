@@ -1,14 +1,10 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export function Card({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("rounded-[28px] border border-line bg-surface shadow-card", className)}
-      {...props}
-    />
-  );
+/**
+ * Utility card: white, one hairline, 18px radius, no shadow. Elevation in this
+ * system comes from surface-color change, not from shadow.
+ */
+export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("rounded-lg border border-line bg-surface", className)} {...props} />;
 }

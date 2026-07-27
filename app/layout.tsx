@@ -1,9 +1,21 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { absoluteUrl } from "@/lib/utils";
+
+/**
+ * Apple devices resolve to the real SF Pro ahead of this in the font stack;
+ * Inter is the fallback everywhere else. Self-hosted at build time, so there is
+ * no external request and no cost.
+ */
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap"
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(absoluteUrl("/")),
@@ -25,7 +37,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body>
         <a href="#main-content" className="skip-link">
           Skip to main content

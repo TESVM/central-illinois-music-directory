@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, Mail, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { enforceFloor, formatRate, isFloorRate } from "@/lib/rates";
 import { getMusicianBySlug, instrumentPhotos, musicians } from "@/lib/site-data";
 
 type Props = {
@@ -32,49 +33,65 @@ export default async function MusicianProfilePage({ params }: Props) {
     notFound();
   }
 
+  const rate = enforceFloor(musician.hourlyRate);
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-      <section className="overflow-hidden rounded-[36px] border border-line bg-white/90 shadow-soft">
-        <div className={`p-8 text-white sm:p-10 ${musician.accentClass}`}>
-          <div
-            role="img"
-            aria-label={`${musician.name} profile portrait placeholder`}
-            className="flex h-20 w-20 items-center justify-center rounded-[24px] border border-white/30 bg-white/15 text-2xl font-semibold"
-          >
-            {musician.initials}
+      <section className="overflow-hidden rounded-lg border border-line bg-surface">
+        <div className="border-b border-line-soft p-8 sm:p-10">
+          <div className="flex flex-wrap items-start justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div
+                role="img"
+                aria-label={`${musician.name} profile portrait placeholder`}
+                className="flex h-20 w-20 items-center justify-center rounded-full bg-pearl text-2xl font-semibold text-ink-muted ring-1 ring-line-soft"
+              >
+                {musician.initials}
+              </div>
+              <div>
+                <p className="text-sm text-ink-subtle">{musician.city}, Illinois</p>
+                <h1 className="mt-1 text-display-lg font-semibold text-ink">{musician.name}</h1>
+                <p className="mt-1 text-tagline font-normal text-ink-muted">{musician.primaryRole}</p>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <p className="text-display-md font-semibold text-ink">{formatRate(rate)}</p>
+              <p className="text-sm text-ink-subtle">
+                {isFloorRate(rate) ? "Starting rate" : "Set by this musician"}
+              </p>
+            </div>
           </div>
-          <p className="mt-6 text-sm font-semibold uppercase tracking-[0.25em] text-white/80">{musician.city}, Illinois</p>
-          <h1 className="mt-3 font-display text-5xl">{musician.name}</h1>
-          <p className="mt-2 text-lg text-white/88">{musician.primaryRole}</p>
-          <div className="mt-6 flex flex-wrap gap-3">
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href="/request-musician">Request this musician</Link>
+            </Button>
             <Button asChild variant="secondary">
               <Link href={`mailto:${musician.email}`}>Contact by email</Link>
-            </Button>
-            <Button asChild className="bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20">
-              <Link href="/church-search-request">Request booking support</Link>
             </Button>
           </div>
         </div>
 
         <div className="grid gap-8 p-8 lg:grid-cols-[0.72fr_0.28fr]">
           <div className="space-y-8">
-            <Card className="rounded-[28px] bg-white/85 p-6">
-              <h2 className="font-display text-3xl text-ink">About</h2>
-              <p className="mt-4 text-base leading-8 text-stone-700">{musician.bio}</p>
+            <Card className="p-6">
+              <h2 className="text-display-md font-semibold text-ink">About</h2>
+              <p className="mt-4 text-body leading-relaxed text-ink-muted">{musician.bio}</p>
             </Card>
 
             <div className="grid gap-6 md:grid-cols-2">
-              <Card className="rounded-[28px] bg-white/85 p-6">
-                <h2 className="font-display text-2xl text-ink">Churches served</h2>
-                <ul className="mt-4 space-y-3 text-sm leading-7 text-stone-700">
+              <Card className="p-6">
+                <h2 className="text-tagline font-semibold text-ink">Churches served</h2>
+                <ul className="mt-4 space-y-3 text-sm leading-relaxed text-ink-muted">
                   {musician.churches.map((church) => (
                     <li key={church}>{church}</li>
                   ))}
                 </ul>
               </Card>
-              <Card className="rounded-[28px] bg-white/85 p-6">
-                <h2 className="font-display text-2xl text-ink">Events and stages</h2>
-                <ul className="mt-4 space-y-3 text-sm leading-7 text-stone-700">
+              <Card className="p-6">
+                <h2 className="text-tagline font-semibold text-ink">Events and stages</h2>
+                <ul className="mt-4 space-y-3 text-sm leading-relaxed text-ink-muted">
                   {musician.events.map((event) => (
                     <li key={event}>{event}</li>
                   ))}
@@ -82,32 +99,32 @@ export default async function MusicianProfilePage({ params }: Props) {
               </Card>
             </div>
 
-            <Card className="rounded-[28px] bg-white/85 p-6">
-              <h2 className="font-display text-2xl text-ink">Media gallery</h2>
+            <Card className="p-6">
+              <h2 className="text-tagline font-semibold text-ink">Media gallery</h2>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                {musician.media.map((item, index) => (
+                {musician.media.map((item) => (
                   <div
                     key={item}
                     role="img"
                     aria-label={`${item} placeholder media tile`}
-                    className={`rounded-[24px] p-5 text-white shadow-card ${index % 2 === 0 ? "bg-[linear-gradient(135deg,#2f8f88,#12363e)]" : "bg-[linear-gradient(135deg,#f28b66,#8b5e3c)]"}`}
+                    className="rounded-md bg-pearl p-5 ring-1 ring-line-soft"
                   >
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/70">Media sample</p>
-                    <p className="mt-3 font-display text-2xl">{item}</p>
+                    <p className="text-sm text-ink-subtle">Media sample</p>
+                    <p className="mt-2 text-body font-semibold text-ink">{item}</p>
                   </div>
                 ))}
               </div>
             </Card>
 
-            <Card className="rounded-[28px] bg-white/85 p-6">
-              <h2 className="font-display text-2xl text-ink">Instrument inspiration</h2>
+            <Card className="p-6">
+              <h2 className="text-tagline font-semibold text-ink">Instrument inspiration</h2>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 {instrumentPhotos.slice(0, 2).map((photo) => (
-                  <div key={photo.title} className="overflow-hidden rounded-[24px] border border-line bg-surface">
+                  <div key={photo.title} className="overflow-hidden rounded-md border border-line bg-surface">
                     <Image src={photo.src} alt={photo.alt} width={1200} height={840} className="h-48 w-full object-cover" />
                     <div className="p-4">
                       <p className="font-semibold text-ink">{photo.title}</p>
-                      <p className="mt-2 text-sm leading-7 text-stone-600">{photo.caption}</p>
+                      <p className="mt-2 text-sm leading-relaxed text-ink-subtle">{photo.caption}</p>
                     </div>
                   </div>
                 ))}
@@ -116,9 +133,9 @@ export default async function MusicianProfilePage({ params }: Props) {
           </div>
 
           <aside className="space-y-6">
-            <Card className="rounded-[28px] bg-white/85 p-6">
-              <h2 className="font-display text-2xl text-ink">Profile details</h2>
-              <div className="mt-5 space-y-4 text-sm leading-7 text-stone-700">
+            <Card className="p-6">
+              <h2 className="text-tagline font-semibold text-ink">Profile details</h2>
+              <div className="mt-5 space-y-4 text-sm leading-relaxed text-ink-muted">
                 <div className="flex items-start gap-3">
                   <CalendarDays className="mt-1 h-4 w-4 text-brand-700" />
                   <span>{musician.yearsExperience} years of playing and singing experience</span>
@@ -141,9 +158,9 @@ export default async function MusicianProfilePage({ params }: Props) {
               </div>
             </Card>
 
-            <Card className="rounded-[28px] bg-white/85 p-6">
-              <h2 className="font-display text-2xl text-ink">Social links</h2>
-              <div className="mt-5 space-y-3 text-sm text-brand-900">
+            <Card className="p-6">
+              <h2 className="text-tagline font-semibold text-ink">Social links</h2>
+              <div className="mt-5 space-y-3 text-sm text-brand-700">
                 <a className="block underline-offset-4 hover:underline focus-ring" href={musician.facebook}>Facebook</a>
                 <a className="block underline-offset-4 hover:underline focus-ring" href={musician.instagram}>Instagram</a>
                 <a className="block underline-offset-4 hover:underline focus-ring" href={musician.linkedin}>LinkedIn</a>

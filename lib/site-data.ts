@@ -10,6 +10,8 @@ export type Musician = {
   genres: string[];
   availability: string;
   churchTypes: string[];
+  /** Never below FLOOR_RATE. Read it through `enforceFloor` before display. */
+  hourlyRate: number;
   shortBio: string;
   bio: string;
   churches: string[];
@@ -40,6 +42,7 @@ export const musicians: Musician[] = [
     genres: ["Contemporary Worship", "Gospel", "Acoustic"],
     availability: "Weekends and select Friday evenings",
     churchTypes: ["Non-denominational", "Baptist", "Campus Ministry"],
+    hourlyRate: 45,
     shortBio: "Warm lead vocalist with experience building congregational confidence in mixed-age rooms.",
     bio: "Moriah serves as a worship vocalist and acoustic guitarist for weekend services, student worship gatherings, and ministry retreats. She is especially comfortable leading blended rooms where both modern worship and familiar hymns are part of the set.",
     churches: ["Hope Fellowship Savoy", "The Well Community Church", "Mercy Hill Young Adults"],
@@ -68,6 +71,7 @@ export const musicians: Musician[] = [
     genres: ["Gospel", "Traditional", "Contemporary Worship"],
     availability: "Sundays, rehearsals, and conference weekends",
     churchTypes: ["Church of God in Christ", "Pentecostal", "Community Church"],
+    hourlyRate: 75,
     shortBio: "Versatile keys player comfortable with spontaneous ministry moments and arranged transitions.",
     bio: "Isaiah has served as a keyboardist and music director for churches, citywide worship nights, and youth conferences. He reads rooms well, supports spoken moments naturally, and communicates clearly with singers and rhythm sections.",
     churches: ["Greater Harvest Worship Center", "New Light Outreach Church", "Urbana Gospel Fellowship"],
@@ -96,6 +100,7 @@ export const musicians: Musician[] = [
     genres: ["Classical Crossover", "Worship", "Instrumental"],
     availability: "Seasonal events, weddings, and advance-booked services",
     churchTypes: ["Liturgical", "Community Church", "Multi-site"],
+    hourlyRate: 60,
     shortBio: "Elegant violinist for worship services, weddings, and special church gatherings.",
     bio: "Elena brings expressive violin parts and small-string arrangements to worship teams that want warmth without clutter. She is often booked for Christmas, Easter, weddings, and devotional services.",
     churches: ["St. Matthew Parish", "Grace Harbor Church", "South Ridge Fellowship"],
@@ -124,6 +129,7 @@ export const musicians: Musician[] = [
     genres: ["Contemporary Worship", "Indie Worship", "Pop"],
     availability: "Weekends and midweek rehearsals",
     churchTypes: ["Non-denominational", "Evangelical", "Youth Ministry"],
+    hourlyRate: 50,
     shortBio: "Modern worship guitarist with clean ambient textures and dependable rehearsal prep.",
     bio: "Caleb supports worship teams that run on arrangement detail, click tracks, and modern guitar tones. He is strong in rehearsal prep, patch organization, and helping volunteer teams feel comfortable.",
     churches: ["Northfield Church", "Revive Youth Collective", "Harvest Chapel Mahomet"],
@@ -151,6 +157,7 @@ export const musicians: Musician[] = [
     genres: ["Gospel", "Hymns", "Choir Music"],
     availability: "Sunday mornings and seasonal choir intensives",
     churchTypes: ["Baptist", "Methodist", "Traditional"],
+    hourlyRate: 70,
     shortBio: "Seasoned choir leader with strong rehearsal instincts and warm pastoral presence.",
     bio: "Ruth directs volunteer choirs, sections, and seasonal ensembles. She is especially valuable for churches rebuilding a music ministry rhythm and wanting both structure and warmth.",
     churches: ["Union Baptist Church", "First Methodist Rantoul", "Community Gospel Celebration Choir"],
@@ -178,6 +185,7 @@ export const musicians: Musician[] = [
     genres: ["Contemporary Worship", "Gospel", "R&B"],
     availability: "Flexible weekends and advance-booked events",
     churchTypes: ["Pentecostal", "Non-denominational", "Youth Ministry"],
+    hourlyRate: 45,
     shortBio: "Steady drummer who balances energy with sensitivity to worship flow.",
     bio: "Jonah is a dependable drummer for churches that need strong time, tasteful fills, and quick musical communication. He supports both click-based worship sets and more spontaneous church environments.",
     churches: ["Kingdom Life Church", "Restore Worship House", "CU Night of Worship"],

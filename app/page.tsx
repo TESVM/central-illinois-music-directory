@@ -5,7 +5,8 @@ import { HeroSearch } from "@/components/site/hero-search";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/layout/section-heading";
-import { getFeaturedMusicians, instrumentPhotos, testimonials } from "@/lib/site-data";
+import { FLOOR_RATE, formatCurrency } from "@/lib/rates";
+import { getFeaturedMusicians, instrumentPhotos, musicians, testimonials } from "@/lib/site-data";
 import { churchDirectoryUrl } from "@/lib/utils";
 
 const featuredMusicians = getFeaturedMusicians();
@@ -84,14 +85,18 @@ export default function HomePage() {
             </Button>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {/*
+              Derived from real data rather than hardcoded, so these figures
+              cannot drift into being untrue as the directory grows.
+            */}
             {[
-              ["80+", "Profiles across Central Illinois"],
-              ["24h", "Typical response window for inquiries"],
-              ["AA", "Accessibility-first design baseline"]
+              [`${musicians.length}`, "Vetted musicians, each profile reviewed"],
+              [formatCurrency(FLOOR_RATE), "Minimum hourly rate, always"],
+              [`${new Set(musicians.map((musician) => musician.city)).size}`, "Cities across Central Illinois"]
             ].map(([value, label]) => (
-              <Card key={label} className="rounded-[24px] border-white/70 bg-white/80 p-5">
+              <Card key={label} className="p-5">
                 <p className="text-2xl font-semibold text-ink">{value}</p>
-                <p className="mt-2 text-sm text-stone-600">{label}</p>
+                <p className="mt-2 text-sm text-ink-subtle">{label}</p>
               </Card>
             ))}
           </div>

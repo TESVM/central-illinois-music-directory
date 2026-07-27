@@ -2,21 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-body: "Source Sans 3";
-  --font-display: "Fraunces";
-}
-
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background:
-    radial-gradient(circle at top left, rgba(47, 143, 136, 0.16), transparent 24%),
-    radial-gradient(circle at 85% 10%, rgba(242, 139, 102, 0.12), transparent 22%),
-    linear-gradient(180deg, #fcfdfa 0%, #eef5f7 46%, #e7eff2 100%);
+  /* Flat parchment. DESIGN.md: atmosphere comes from photography, not gradients. */
+  background: #f5f5f7;
   @apply text-ink antialiased;
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.374px;
+}
+
+/* "Apple tight" tracking on display sizes. Never applied below 12px. */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.374px;
+  @apply font-semibold;
 }
 
 a {
@@ -28,41 +32,93 @@ a:hover {
 }
 
 ::selection {
-  @apply bg-brand-300 text-brand-900;
+  @apply bg-brand-100 text-brand-900;
 }
 
 .skip-link {
-  @apply absolute left-4 top-4 z-[100] rounded-full bg-brand-900 px-4 py-3 text-sm font-semibold text-white opacity-0 shadow-card transition;
+  @apply absolute left-4 top-4 z-[100] rounded-full bg-brand-700 px-4 py-3 text-sm font-semibold text-white opacity-0 transition;
 }
 
 .skip-link:focus {
   @apply opacity-100;
 }
 
+/*
+ * The three section helpers below are used across the existing pages. Flattening
+ * them here converts every page to the Apple surface rhythm — light, parchment,
+ * and near-black tiles with no decorative chrome — in one place.
+ */
 .section-wash {
-  background:
-    radial-gradient(circle at 20% 20%, rgba(47, 143, 136, 0.14), transparent 22%),
-    radial-gradient(circle at 75% 0%, rgba(242, 139, 102, 0.12), transparent 18%),
-    rgba(255, 253, 248, 0.78);
-  backdrop-filter: blur(6px);
+  background: #ffffff;
 }
 
 .section-strong {
-  background:
-    radial-gradient(circle at 14% 18%, rgba(47, 143, 136, 0.26), transparent 22%),
-    radial-gradient(circle at 86% 12%, rgba(242, 139, 102, 0.2), transparent 18%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(215, 236, 235, 0.82));
-  backdrop-filter: blur(10px);
+  background: #f5f5f7;
 }
 
 .tint-card {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(238, 248, 248, 0.86)),
-    linear-gradient(135deg, rgba(47, 143, 136, 0.06), rgba(242, 139, 102, 0.06));
+  background: #ffffff;
+}
+
+/* Frosted chrome — the one place blur is used, and it is functional. */
+.frosted {
+  background: rgba(245, 245, 247, 0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
 .focus-ring {
-  @apply focus:outline-none focus:ring-4 focus:ring-brand-700 focus:ring-offset-2;
+  @apply focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500;
+}
+
+/* System-wide press micro-interaction. */
+.press {
+  @apply transition-transform active:scale-[0.97];
+}
+
+/* The only shadow in the system, reserved for imagery. */
+.product-shadow {
+  box-shadow: rgba(0, 0, 0, 0.22) 3px 5px 30px 0;
+}
+
+/*
+ * Range inputs are used in the rate calculator. Styled to match the pill
+ * grammar, with a 44px effective touch target on the thumb.
+ */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: #e0e0e0;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 24px;
+  width: 24px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 24px;
+  width: 24px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid #0071e3;
+  outline-offset: 4px;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -18,6 +18,26 @@ export const submitListingSchema = z.object({
   description: z.string().min(20)
 });
 
+export const gigRequestSchema = z.object({
+  organization: z.string().min(2),
+  contactName: z.string().min(2),
+  contactEmail: z.string().email(),
+  contactPhone: z.string().optional().or(z.literal("")),
+  eventType: z.string().min(2),
+  eventDate: z.string().min(4),
+  startTime: z.string().optional().or(z.literal("")),
+  venue: z.string().min(2),
+  instruments: z.array(z.string()).min(1, "Pick at least one instrument"),
+  hours: z.number().min(1).max(12),
+  musicians: z.number().int().min(1).max(20),
+  hourlyRate: z.number().min(1),
+  travelMiles: z.number().min(0).max(500),
+  equipmentFee: z.number().min(0).max(5000),
+  notes: z.string().optional().or(z.literal(""))
+});
+
+export type GigRequestInput = z.infer<typeof gigRequestSchema>;
+
 export const claimSchema = z.object({
   churchName: z.string().min(2),
   churchSlug: z.string().optional().or(z.literal("")),

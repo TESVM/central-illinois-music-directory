@@ -2,7 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { contactSchema, claimSchema, submitListingSchema } from "@/lib/validation/forms";
+import {
+  contactSchema,
+  claimSchema,
+  gigRequestSchema,
+  submitListingSchema,
+  type GigRequestInput
+} from "@/lib/validation/forms";
+import { computeQuote, enforceFloor, quoteToPlainText } from "@/lib/rates";
+import { sendGigNotification } from "@/lib/notify";
 import {
   createPersistedClaimRequest,
   reviewPersistedClaimRequest,
@@ -29,6 +37,75 @@ export async function submitListingAction(formData: FormData) {
     serviceTimes: formData.get("serviceTimes"),
     description: formData.get("description")
   });
+}
+
+/**
+ * Receives a gig request from an organization.
+ *
+ * The request is validated and re-priced server-side — a total computed in the
+ * browser is never trusted. It is then written to the server log (readable in
+ * the Vercel dashboard) and emailed if a provider is configured.
+ *
+ * `delivered` is returned honestly so the confirmation screen can prompt the
+ * organization to send a copy themselves when no mail provider is set up.
+ */
+export async function submitGigRequestAction(input: GigRequestInput) {
+  const payload = gigRequestSchema.parse(input);
+
+  const quote = computeQuote({
+    hourlyRate: enforceFloor(payload.hourlyRate),
+    hours: payload.hours,
+    musicians: payload.musicians,
+    travelMiles: payload.travelMiles,
+    equipmentFee: payload.equipmentFee
+  });
+
+  console.info(
+    "[gig-request]",
+    JSON.stringify({
+      receivedAt: new Date().toISOString(),
+      organization: payload.organization,
+      contactName: payload.contactName,
+      contactEmail: payload.contactEmail,
+      contactPhone: payload.contactPhone,
+      eventType: payload.eventType,
+      eventDate: payload.eventDate,
+      startTime: payload.startTime,
+      venue: payload.venue,
+      instruments: payload.instruments,
+      notes: payload.notes,
+      quote
+    })
+  );
+
+  const summary = [
+    `New musician request from ${payload.organization}`,
+    "",
+    `Contact:  ${payload.contactName}`,
+    `Email:    ${payload.contactEmail}`,
+    `Phone:    ${payload.contactPhone || "not given"}`,
+    `Event:    ${payload.eventType} on ${payload.eventDate}${payload.startTime ? ` at ${payload.startTime}` : ""}`,
+    `Venue:    ${payload.venue}`,
+    `Needs:    ${payload.instruments.join(", ")}`,
+    payload.notes ? `Notes:    ${payload.notes}` : "",
+    "",
+    quoteToPlainText(quote, "Quoted estimate")
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const delivery = await sendGigNotification({
+    subject: `Musician request — ${payload.organization} (${payload.eventDate})`,
+    body: summary,
+    replyTo: payload.contactEmail
+  });
+
+  return {
+    ok: true as const,
+    quote,
+    summary,
+    delivered: delivery.delivered
+  };
 }
 
 export async function claimListingAction(formData: FormData) {
