@@ -7,13 +7,17 @@ import { churchDirectoryUrl } from "@/lib/utils";
  * Two-row Apple nav: a slim black global bar, then a frosted sub-nav carrying
  * the site name and the persistent primary CTA.
  */
+/*
+ * "Booking rates" is what a church pays a musician; "Memberships" is what the
+ * directory charges. Keeping the two labels distinct avoids the obvious mix-up.
+ */
 const globalNav = [
   { href: "/musicians", label: "Musicians" },
-  { href: "/rates", label: "Rates" },
+  { href: "/rates", label: "Booking rates" },
+  { href: "/pricing", label: "Memberships" },
   { href: "/request-musician", label: "Request" },
   { href: "/create-profile", label: "Join" },
   { href: "/about", label: "About" },
-  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" }
 ];
 

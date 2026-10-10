@@ -22,16 +22,17 @@ export function Footer() {
         <FooterColumn title="For organizations">
           <Link href="/musicians">Browse musicians</Link>
           <Link href="/request-musician">Request a musician</Link>
-          <Link href="/rates">Rates &amp; pricing</Link>
+          <Link href="/rates">What booking costs</Link>
+          <Link href="/pricing">Church memberships</Link>
           <a href={churchDirectoryUrl("/")} target="_blank" rel="noreferrer">
             Browse churches
           </a>
         </FooterColumn>
 
         <FooterColumn title="For musicians">
-          <Link href="/create-profile">Create a profile</Link>
+          <Link href="/create-profile">Create a free profile</Link>
           <Link href="/rates">How pay works</Link>
-          <Link href="/dashboard">Dashboard</Link>
+          <Link href="/pricing">Memberships</Link>
           <Link href="/faq">FAQ</Link>
         </FooterColumn>
 

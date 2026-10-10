@@ -41,10 +41,32 @@ export default async function AdminChurchEditPage({ params }: { params: Promise<
               <div className="md:col-span-2">
                 <Textarea defaultValue={church.description} aria-label="Description" />
               </div>
-              <div className="md:col-span-2 flex gap-3">
-                <Button type="button">Save changes</Button>
-                <Button type="button" variant="secondary">Mark verified</Button>
-                <Button type="button" variant="secondary">Mark claimed</Button>
+              {/*
+                These controls have no persistence behind them yet. They are
+                disabled rather than left clickable, so an admin is never told
+                a change was saved when nothing was written.
+              */}
+              <div className="md:col-span-2">
+                <p
+                  role="note"
+                  className="rounded-lg border border-line bg-pearl p-4 text-sm leading-relaxed text-ink-muted"
+                >
+                  <span className="font-semibold text-ink">Read-only preview.</span> Editing
+                  churches from the admin panel needs the database layer, which isn&apos;t
+                  connected yet. These fields show current values; saving is disabled so nothing
+                  appears to persist when it would not.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button type="button" disabled>
+                    Save changes
+                  </Button>
+                  <Button type="button" variant="secondary" disabled>
+                    Mark verified
+                  </Button>
+                  <Button type="button" variant="secondary" disabled>
+                    Mark claimed
+                  </Button>
+                </div>
               </div>
             </form>
           </Card>

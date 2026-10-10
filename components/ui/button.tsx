@@ -16,7 +16,7 @@ const buttonVariants = cva(
         default: "rounded-full bg-brand-700 px-[22px] py-[11px] text-white disabled:bg-line",
         // The "ghost pill" — the second CTA when two sit together.
         secondary:
-          "rounded-full border border-brand-700 bg-transparent px-[22px] py-[11px] text-brand-700",
+          "rounded-full border border-brand-700 bg-transparent px-[22px] py-[11px] text-brand-700 disabled:border-line",
         // Pearl capsule for tertiary actions on cards.
         pearl: "rounded-md bg-pearl px-[14px] py-2 text-sm text-ink-muted ring-1 ring-line-soft",
         // Compact dark utility rect, used in chrome.

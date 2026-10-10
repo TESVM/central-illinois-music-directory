@@ -11,6 +11,7 @@ import {
   type GigRequestInput,
   type MusicianProfileInput
 } from "@/lib/validation/forms";
+import { getPlan, type PlanId } from "@/lib/plans";
 import { computeQuote, enforceFloor, quoteToPlainText } from "@/lib/rates";
 import { sendGigNotification } from "@/lib/notify";
 import {
@@ -34,10 +35,28 @@ export async function submitContactAction(
   _previous: FormResult,
   formData: FormData
 ): Promise<FormResult> {
+  const organization = formData.get("organization")?.toString().trim() || undefined;
+
+  // Set by the pricing page's "tell me when this launches" buttons. Validated
+  // against the catalog so a crafted query value is never echoed into email.
+  const rawInterest = formData.get("interest")?.toString();
+  const interestedPlan = rawInterest ? getPlan(rawInterest as PlanId) : undefined;
+
+  const rawMessage = formData.get("message")?.toString().trim() ?? "";
+
+  // Registering interest in a plan is a complete request on its own, so it
+  // does not have to clear the free-text minimum.
+  const message =
+    rawMessage.length > 0
+      ? rawMessage
+      : interestedPlan
+        ? `Please notify me when ${interestedPlan.name} is available.`
+        : rawMessage;
+
   const parsed = contactSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
-    message: formData.get("message")
+    message
   });
 
   if (!parsed.success) {
@@ -48,16 +67,33 @@ export async function submitContactAction(
     };
   }
 
-  const { name, email, message } = parsed.data;
+  const { name, email } = parsed.data;
 
   console.info(
     "[contact]",
-    JSON.stringify({ receivedAt: new Date().toISOString(), name, email, message })
+    JSON.stringify({
+      receivedAt: new Date().toISOString(),
+      name,
+      email,
+      organization,
+      interest: interestedPlan?.id,
+      message: parsed.data.message
+    })
   );
 
   const delivery = await sendGigNotification({
-    subject: `Contact form — ${name}`,
-    body: [`From: ${name} <${email}>`, "", message].join("\n"),
+    subject: interestedPlan
+      ? `Membership interest (${interestedPlan.name}) — ${name}`
+      : `Contact form — ${name}`,
+    body: [
+      `From: ${name} <${email}>`,
+      organization ? `Organization: ${organization}` : "",
+      interestedPlan ? `Interested in: ${interestedPlan.name} (${interestedPlan.id})` : "",
+      "",
+      parsed.data.message
+    ]
+      .filter(Boolean)
+      .join("\n"),
     replyTo: email
   });
 
@@ -127,8 +163,17 @@ export async function submitMusicianProfileAction(
   };
 }
 
-export async function submitListingAction(formData: FormData) {
-  submitListingSchema.parse({
+/**
+ * Church listing submission.
+ *
+ * This previously validated the input and returned, discarding every listing
+ * anyone submitted for review.
+ */
+export async function submitListingAction(
+  _previous: FormResult,
+  formData: FormData
+): Promise<FormResult> {
+  const parsed = submitListingSchema.safeParse({
     churchName: formData.get("churchName"),
     city: formData.get("city"),
     contactName: formData.get("contactName"),
@@ -139,6 +184,49 @@ export async function submitListingAction(formData: FormData) {
     serviceTimes: formData.get("serviceTimes"),
     description: formData.get("description")
   });
+
+  if (!parsed.success) {
+    const missing = parsed.error.issues
+      .map((issue) => issue.path.join("."))
+      .filter(Boolean);
+    return {
+      status: "error",
+      message: missing.length
+        ? `Please check these fields: ${[...new Set(missing)].join(", ")}.`
+        : "Some required details are missing. Please review the form."
+    };
+  }
+
+  const listing = parsed.data;
+
+  console.info(
+    "[church-listing]",
+    JSON.stringify({ receivedAt: new Date().toISOString(), ...listing })
+  );
+
+  const delivery = await sendGigNotification({
+    subject: `Church listing submitted — ${listing.churchName}`,
+    body: [
+      `Church:        ${listing.churchName}`,
+      `City:          ${listing.city}`,
+      `Senior pastor: ${listing.seniorPastor}`,
+      `Service times: ${listing.serviceTimes}`,
+      `Website:       ${listing.websiteUrl || "not given"}`,
+      `App:           ${listing.appUrl || "not given"}`,
+      "",
+      `Submitted by:  ${listing.contactName} <${listing.contactEmail}>`,
+      "",
+      "Description:",
+      listing.description
+    ].join("\n"),
+    replyTo: listing.contactEmail
+  });
+
+  return {
+    status: "success",
+    message: "Listing received. We'll review it before it appears in the directory.",
+    delivered: delivery.delivered
+  };
 }
 
 /**

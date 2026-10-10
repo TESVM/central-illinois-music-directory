@@ -69,10 +69,35 @@ export default async function ChurchWorkspacePage({
                 <div className="md:col-span-2">
                   <Textarea defaultValue={church.description} aria-label="Description" />
                 </div>
-                <div className="md:col-span-2 flex flex-wrap gap-3">
-                  <Button type="button">Save draft</Button>
-                  <Button type="button" variant="secondary">Submit for review</Button>
-                  <Button type="button" variant="secondary">Invite editor</Button>
+                {/*
+                  No persistence behind these yet. Disabled rather than
+                  clickable, so a church is never told an edit was saved when
+                  nothing was written.
+                */}
+                <div className="md:col-span-2">
+                  <p
+                    role="note"
+                    className="rounded-lg border border-line bg-pearl p-4 text-sm leading-relaxed text-ink-muted"
+                  >
+                    <span className="font-semibold text-ink">Read-only preview.</span> Editing your
+                    listing here needs the database layer, which isn&apos;t connected yet. To change
+                    anything today,{" "}
+                    <a href="/contact" className="text-brand-700 underline">
+                      send us the details
+                    </a>{" "}
+                    and we&apos;ll update it for you.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Button type="button" disabled>
+                      Save draft
+                    </Button>
+                    <Button type="button" variant="secondary" disabled>
+                      Submit for review
+                    </Button>
+                    <Button type="button" variant="secondary" disabled>
+                      Invite editor
+                    </Button>
+                  </div>
                 </div>
               </form>
             </Card>

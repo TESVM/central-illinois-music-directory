@@ -26,7 +26,7 @@ const quickLinks = [
   {
     title: "Request musicians",
     description: "Tell churches and planners what kind of player you need.",
-    href: "/church-search-request"
+    href: "/request-musician"
   },
   {
     title: "Browse churches",
@@ -290,7 +290,7 @@ export default function HomePage() {
               <Link href="/create-profile">Start your profile</Link>
             </Button>
             <Button asChild className="bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20">
-              <Link href="/church-search-request">Request musicians for an event</Link>
+              <Link href="/request-musician">Request musicians for an event</Link>
             </Button>
             <Button asChild className="bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20">
               <a href={churchDirectoryUrl("/")} target="_blank" rel="noreferrer">

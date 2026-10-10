@@ -1,8 +1,20 @@
 import { ContactForm } from "@/components/forms/contact-form";
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/layout/section-heading";
+import { getPlan, type PlanId } from "@/lib/plans";
 
-export default function ContactPage() {
+type Props = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function ContactPage({ searchParams }: Props) {
+  const params = searchParams ? await searchParams : {};
+
+  // Set by the pricing page's "tell me when this launches" buttons. Resolved
+  // against the catalog so an arbitrary query value can't be echoed back.
+  const rawInterest = typeof params.interest === "string" ? params.interest : undefined;
+  const interestedPlan = rawInterest ? getPlan(rawInterest as PlanId) : undefined;
+
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
       <div>
@@ -25,7 +37,10 @@ export default function ContactPage() {
         </div>
       </div>
       <Card className="p-6 sm:p-8">
-        <ContactForm />
+        <ContactForm
+          interestPlanId={interestedPlan?.id}
+          interestPlanName={interestedPlan?.name}
+        />
       </Card>
     </div>
   );
