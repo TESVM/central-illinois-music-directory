@@ -11,6 +11,21 @@ musicians, a database, accounts, and notifications — are absent.
 Nothing currently lies to a visitor. That took deliberate work (see
 [DECISIONS.md](DECISIONS.md)) and is worth preserving.
 
+## Submissions now fail loudly instead of quietly
+
+Changed 2026-11-25. Nothing is stored durably yet, so the notification email
+*is* the record. The four forms therefore report success **only when the email
+provider accepts the message**. If it does not, the user sees an error naming
+the direct address instead of a confirmation for something that was lost.
+
+While `RESEND_API_KEY` is unset, every submission correctly reports failure.
+That is the honest behaviour, and it is also why configuring email is urgent —
+right now the forms tell people the site cannot take their enquiry.
+
+Once submissions are persisted, receipt should be reported from the saved
+record and delivery tracked separately. See `deliveryOutcome` in
+[../app/actions.ts](../app/actions.ts).
+
 ## Working
 
 - All 10 public pages render and return 200
@@ -26,8 +41,22 @@ Nothing currently lies to a visitor. That took deliberate work (see
 - `robots.txt` excludes admin, dashboard, login, and claim; sitemap lists only
   real public pages
 - Clean TypeScript, clean lint, clean production build
+- Rate limiting on all four submission endpoints, before email dispatch
+- Dev server and production build use separate output directories, so a build
+  can no longer strip the styles from a running dev server
+- Every page has exactly one `<h1>`; text meets WCAG 2.2 AA contrast; nav
+  targets meet the 24×24 minimum
 
 ## Blocking — nothing else matters until these are done
+
+### 0. Rate limiting has no shared store in production
+
+`lib/rate-limit.ts` uses Upstash Redis when `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN` are set, and an in-memory counter otherwise. Vercel
+runs many instances, so the in-memory path is a speed bump, not a limit.
+
+It fails open on error, by design — losing a real enquiry is worse than
+allowing an extra request. `rateLimitBackend()` reports which path is live.
 
 ### 1. No email delivery configured
 

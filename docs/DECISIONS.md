@@ -79,6 +79,33 @@ and offers a direct address.
 
 ---
 
+## Success is reported only when the email is accepted
+
+`deliveryOutcome` in `app/actions.ts` returns an error, not a success, when
+the provider rejects or is unconfigured.
+
+**Why:** nothing is stored durably, so the notification email is the only
+record. If it does not send, the submission no longer exists anywhere. A
+confirmation screen in that situation tells someone their enquiry arrived when
+it did not.
+
+**Revisit when storage lands.** Once a submission is saved first, receipt
+should be reported from the saved record and delivery tracked separately —
+at that point a failed email is a retry problem, not a lost lead.
+
+## Rate limiting fails open, and says which backend it used
+
+`lib/rate-limit.ts` allows the request if the limiter itself errors, and
+exposes `rateLimitBackend()`.
+
+**Why fail open:** these endpoints carry real enquiries from churches. A
+limiter outage silently blocking them would cost more than the spam it
+prevents.
+
+**Why expose the backend:** without Upstash credentials it falls back to a
+per-instance counter, which on Vercel's many instances is a speed bump rather
+than a limit. Naming that in code stops it being mistaken for real protection.
+
 ## Dead buttons were disabled, not wired to fakes
 
 Five controls across the admin and church dashboards had no handlers.
@@ -154,6 +181,20 @@ of them at once and kept old markup compiling. The trade-off is that class
 names no longer describe their colour — `brand-700` is blue, not teal.
 
 ---
+
+## The browse page gets a projection, not the full record
+
+`/musicians` renders through a client component, so it is handed
+`MusicianCard` (display fields only) rather than `Musician`.
+
+**Why:** whatever a client component receives is serialised into the page and
+readable by anyone viewing source. Passing full records published every
+musician's phone number, email, WhatsApp, and social URLs on a public page —
+defeating the contact-detail suppression the profile pages apply, and
+invisible because the UI never rendered them.
+
+Add a field to `MusicianCard` only when the directory UI genuinely displays
+it. The same care applies to any future client component handed user records.
 
 ## Prisma stays even though it's unused
 
