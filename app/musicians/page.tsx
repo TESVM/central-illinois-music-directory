@@ -1,6 +1,6 @@
 import { SectionHeading } from "@/components/layout/section-heading";
 import { MusicianBrowser } from "@/components/site/musician-browser";
-import { musicians } from "@/lib/site-data";
+import { getMusicianCards } from "@/lib/site-data";
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -41,7 +41,7 @@ export default async function MusiciansPage({ searchParams }: Props) {
         </ol>
       </div>
       <div className="mt-10">
-        <MusicianBrowser musicians={musicians} initialFilters={initialFilters} />
+        <MusicianBrowser musicians={getMusicianCards()} initialFilters={initialFilters} />
       </div>
     </div>
   );

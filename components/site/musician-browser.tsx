@@ -7,10 +7,10 @@ import { ExampleBadge, ExampleNotice } from "@/components/site/example-notice";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { enforceFloor, formatRate, isFloorRate } from "@/lib/rates";
-import type { Musician } from "@/lib/site-data";
+import type { MusicianCard } from "@/lib/site-data";
 
 type Props = {
-  musicians: Musician[];
+  musicians: MusicianCard[];
   initialFilters: Record<FilterKey, string>;
 };
 
@@ -25,7 +25,7 @@ const filterGroups: Array<{ name: FilterKey; options: string[] }> = [
   { name: "churchType", options: ["", "Non-denominational", "Baptist", "Pentecostal", "Traditional", "Campus Ministry"] }
 ];
 
-function matchesExperience(musician: Musician, value: string) {
+function matchesExperience(musician: MusicianCard, value: string) {
   if (!value) return true;
   const years = Number.parseInt(value, 10);
   return musician.yearsExperience >= years;

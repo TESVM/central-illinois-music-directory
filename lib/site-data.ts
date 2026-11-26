@@ -310,6 +310,60 @@ export const moderationQueue = [
   }
 ];
 
+/**
+ * The subset of a musician that is safe to send to the browser.
+ *
+ * The browse page renders through a client component, so whatever it is handed
+ * is serialised into the page and readable by anyone viewing source — not just
+ * by the UI. Passing the full record published every musician's phone number,
+ * email, WhatsApp number, and social URLs on a public page, which defeats the
+ * contact-detail suppression the profile pages apply.
+ *
+ * Add a field here only if the directory UI genuinely renders it.
+ */
+export type MusicianCard = Pick<
+  Musician,
+  | "slug"
+  | "name"
+  | "initials"
+  | "primaryRole"
+  | "instruments"
+  | "city"
+  | "yearsExperience"
+  | "genres"
+  | "availability"
+  | "churchTypes"
+  | "hourlyRate"
+  | "shortBio"
+  | "distanceMiles"
+  | "updatedAt"
+  | "example"
+>;
+
+export function toMusicianCard(musician: Musician): MusicianCard {
+  return {
+    slug: musician.slug,
+    name: musician.name,
+    initials: musician.initials,
+    primaryRole: musician.primaryRole,
+    instruments: musician.instruments,
+    city: musician.city,
+    yearsExperience: musician.yearsExperience,
+    genres: musician.genres,
+    availability: musician.availability,
+    churchTypes: musician.churchTypes,
+    hourlyRate: musician.hourlyRate,
+    shortBio: musician.shortBio,
+    distanceMiles: musician.distanceMiles,
+    updatedAt: musician.updatedAt,
+    example: musician.example
+  };
+}
+
+export function getMusicianCards(): MusicianCard[] {
+  return musicians.map(toMusicianCard);
+}
+
 export function getFeaturedMusicians() {
   return musicians.filter((musician) => musician.featured);
 }
