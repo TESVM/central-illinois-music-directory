@@ -127,7 +127,13 @@ export function GigRequestForm() {
     setError(null);
     try {
       const result = await submitGigRequestAction(form);
-      setDelivered(result.delivered);
+      if (!result.ok) {
+        // The request was not delivered and nothing is stored yet, so this is
+        // a failure, not a quiet caveat on a success screen.
+        setError(result.message);
+        return;
+      }
+      setDelivered(true);
       setSent(true);
     } catch {
       setError(

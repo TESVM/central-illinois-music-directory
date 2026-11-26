@@ -14,6 +14,7 @@ import {
 import { getPlan, type PlanId } from "@/lib/plans";
 import { computeQuote, enforceFloor, quoteToPlainText } from "@/lib/rates";
 import { sendGigNotification } from "@/lib/notify";
+import { checkRateLimit, describeRetry } from "@/lib/rate-limit";
 import {
   createPersistedClaimRequest,
   reviewPersistedClaimRequest,
@@ -23,9 +24,72 @@ import {
 export type FormResult = {
   status: "idle" | "success" | "error";
   message: string;
-  /** False when no mail provider is configured, so the UI can say so plainly. */
+  /** True only when the email provider accepted the notification. */
   delivered?: boolean;
+  /** Set when the submission was refused by the rate limiter. */
+  retryAfterSeconds?: number;
 };
+
+const CONTACT_EMAIL = "hello@centralilmusicministry.com";
+
+/**
+ * Per-form submission limits. Generous enough that nobody filling in a form
+ * honestly will hit them, tight enough that a script cannot drain the monthly
+ * email quota.
+ */
+const LIMITS = {
+  contact: { limit: 5, windowSeconds: 600 },
+  profile: { limit: 3, windowSeconds: 3600 },
+  listing: { limit: 3, windowSeconds: 3600 },
+  gig: { limit: 5, windowSeconds: 3600 }
+} as const;
+
+/** Returns a FormResult when the caller is over the limit, otherwise null. */
+async function guardRate(action: keyof typeof LIMITS): Promise<FormResult | null> {
+  const verdict = await checkRateLimit(action, LIMITS[action]);
+  if (verdict.allowed) return null;
+
+  return {
+    status: "error",
+    message: `That's a few submissions in a short time. Please wait ${describeRetry(
+      verdict.retryAfterSeconds
+    )} and try again — or email ${CONTACT_EMAIL} if it's urgent.`,
+    retryAfterSeconds: verdict.retryAfterSeconds
+  };
+}
+
+/**
+ * Turns a delivery attempt into the result the user sees.
+ *
+ * Nothing is stored durably yet, so the notification email IS the record. If
+ * the provider did not accept it, the submission is gone — reporting that as
+ * success would tell someone their enquiry was received when it was lost.
+ * Success is therefore gated on delivery, and failure gives the person a route
+ * that actually works.
+ *
+ * Once submissions are persisted, this should report receipt from the saved
+ * record and track delivery separately.
+ */
+function deliveryOutcome(
+  delivery: Awaited<ReturnType<typeof sendGigNotification>>,
+  successMessage: string,
+  whatWasSent: string
+): FormResult {
+  if (delivery.delivered) {
+    return { status: "success", message: successMessage, delivered: true };
+  }
+
+  const because =
+    delivery.reason === "not_configured" || delivery.reason === "no_recipient"
+      ? "Our notification system isn't finished being set up"
+      : "We couldn't get your message through just now";
+
+  return {
+    status: "error",
+    message: `${because}, so ${whatWasSent} was not delivered. Please email ${CONTACT_EMAIL} directly and we'll pick it up from there. Nothing you typed was sent.`,
+    delivered: false
+  };
+}
 
 /**
  * Contact form. Previously this validated the input and then discarded it —
@@ -35,6 +99,9 @@ export async function submitContactAction(
   _previous: FormResult,
   formData: FormData
 ): Promise<FormResult> {
+  const limited = await guardRate("contact");
+  if (limited) return limited;
+
   const organization = formData.get("organization")?.toString().trim() || undefined;
 
   // Set by the pricing page's "tell me when this launches" buttons. Validated
@@ -97,13 +164,11 @@ export async function submitContactAction(
     replyTo: email
   });
 
-  return {
-    status: "success",
-    message: delivery.delivered
-      ? "Thanks — your message is on its way. We'll reply to the email you gave us."
-      : "Thanks — we've received your message.",
-    delivered: delivery.delivered
-  };
+  return deliveryOutcome(
+    delivery,
+    "Thanks — your message is on its way. We'll reply to the email you gave us.",
+    "your message"
+  );
 }
 
 /**
@@ -115,6 +180,9 @@ export async function submitContactAction(
 export async function submitMusicianProfileAction(
   input: MusicianProfileInput
 ): Promise<FormResult> {
+  const limited = await guardRate("profile");
+  if (limited) return limited;
+
   const parsed = musicianProfileSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -156,11 +224,11 @@ export async function submitMusicianProfileAction(
     replyTo: profile.email
   });
 
-  return {
-    status: "success",
-    message: "Profile received. We'll review it and get in touch before it goes live.",
-    delivered: delivery.delivered
-  };
+  return deliveryOutcome(
+    delivery,
+    "Profile received. We'll review it and get in touch before it goes live.",
+    "your profile"
+  );
 }
 
 /**
@@ -173,6 +241,9 @@ export async function submitListingAction(
   _previous: FormResult,
   formData: FormData
 ): Promise<FormResult> {
+  const limited = await guardRate("listing");
+  if (limited) return limited;
+
   const parsed = submitListingSchema.safeParse({
     churchName: formData.get("churchName"),
     city: formData.get("city"),
@@ -222,11 +293,11 @@ export async function submitListingAction(
     replyTo: listing.contactEmail
   });
 
-  return {
-    status: "success",
-    message: "Listing received. We'll review it before it appears in the directory.",
-    delivered: delivery.delivered
-  };
+  return deliveryOutcome(
+    delivery,
+    "Listing received. We'll review it before it appears in the directory.",
+    "your listing"
+  );
 }
 
 /**
@@ -239,8 +310,31 @@ export async function submitListingAction(
  * `delivered` is returned honestly so the confirmation screen can prompt the
  * organization to send a copy themselves when no mail provider is set up.
  */
-export async function submitGigRequestAction(input: GigRequestInput) {
-  const payload = gigRequestSchema.parse(input);
+export type GigRequestResult =
+  | { ok: true; quote: ReturnType<typeof computeQuote>; summary: string }
+  | { ok: false; message: string; retryAfterSeconds?: number };
+
+export async function submitGigRequestAction(
+  input: GigRequestInput
+): Promise<GigRequestResult> {
+  const limited = await guardRate("gig");
+  if (limited) {
+    return {
+      ok: false,
+      message: limited.message,
+      retryAfterSeconds: limited.retryAfterSeconds
+    };
+  }
+
+  const validated = gigRequestSchema.safeParse(input);
+  if (!validated.success) {
+    return {
+      ok: false,
+      message:
+        "Some of the request details didn't look right. Please check the form and try again."
+    };
+  }
+  const payload = validated.data;
 
   const quote = computeQuote({
     hourlyRate: enforceFloor(payload.hourlyRate),
@@ -290,12 +384,20 @@ export async function submitGigRequestAction(input: GigRequestInput) {
     replyTo: payload.contactEmail
   });
 
-  return {
-    ok: true as const,
-    quote,
-    summary,
-    delivered: delivery.delivered
-  };
+  // Nothing is stored yet, so an undelivered notification means the request is
+  // gone. Reporting success here would tell a church we had their booking when
+  // we did not.
+  if (!delivery.delivered) {
+    return {
+      ok: false,
+      message:
+        delivery.reason === "not_configured" || delivery.reason === "no_recipient"
+          ? `Our notification system isn't finished being set up, so this request was not delivered. Please email ${CONTACT_EMAIL} and we'll arrange it directly.`
+          : `We couldn't get your request through just now. Please email ${CONTACT_EMAIL} and we'll pick it up from there.`
+    };
+  }
+
+  return { ok: true, quote, summary };
 }
 
 export async function claimListingAction(formData: FormData) {

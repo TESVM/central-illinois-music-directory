@@ -72,8 +72,17 @@ export function CreateProfileForm() {
     setState((current) => ({ ...current, [field]: value }));
   }
 
+  /** Writes the draft without touching the status message. */
+  function persistDraft() {
+    try {
+      window.localStorage.setItem("musician-profile-draft", JSON.stringify(state));
+    } catch {
+      // Private browsing or blocked storage. The answers are still on screen.
+    }
+  }
+
   function saveDraft() {
-    window.localStorage.setItem("musician-profile-draft", JSON.stringify(state));
+    persistDraft();
     setMessage("Draft saved locally on this device.");
   }
 
@@ -128,6 +137,9 @@ export function CreateProfileForm() {
       });
 
       if (result.status === "error") {
+        // The submission did not get through, so keep the answers recoverable:
+        // without this a refresh on the error screen loses everything typed.
+        persistDraft();
         setMessage(result.message);
         return;
       }
@@ -137,6 +149,7 @@ export function CreateProfileForm() {
       setDelivered(result.delivered !== false);
       setSubmitted(true);
     } catch {
+      persistDraft();
       setMessage(
         "That didn't send. Check your connection and try again, or email us at hello@centralilmusicministry.com."
       );
