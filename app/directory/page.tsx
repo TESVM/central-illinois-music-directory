@@ -21,6 +21,7 @@ export default async function DirectoryPage({
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="section-strong overflow-hidden rounded-[36px] border border-white/70 px-6 py-8 shadow-soft sm:px-8">
         <SectionHeading
+          as="h1"
           eyebrow="Directory"
           title="Searchable church directory"
           description="Filter by city, denomination, senior pastor, service day, ministries, website, app, livestream, and verification status."

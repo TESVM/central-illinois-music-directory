@@ -27,7 +27,7 @@ export function Header() {
       {/* Global nav — pure black, 44px, 12px links. */}
       <div className="bg-black text-white">
         <div className="mx-auto flex h-11 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="focus-ring flex items-center gap-2 rounded-sm" aria-label="Home">
+          <Link href="/" className="focus-ring flex h-6 min-w-6 items-center justify-center gap-2 rounded-sm" aria-label="Home">
             <LogoMark className="h-4 w-4" tone="bare" />
           </Link>
 
@@ -36,7 +36,7 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="focus-ring rounded-sm text-xs text-white/90 hover:text-white"
+                className="focus-ring inline-flex min-h-6 items-center rounded-sm px-1 text-xs text-white/90 hover:text-white"
               >
                 {item.label}
               </Link>
@@ -45,7 +45,7 @@ export function Header() {
               href={churchDirectoryUrl("/")}
               target="_blank"
               rel="noreferrer"
-              className="focus-ring rounded-sm text-xs text-white/90 hover:text-white"
+              className="focus-ring inline-flex min-h-6 items-center rounded-sm px-1 text-xs text-white/90 hover:text-white"
             >
               Churches
             </a>
@@ -53,7 +53,7 @@ export function Header() {
 
           {/* Mobile tray. */}
           <details className="md:hidden">
-            <summary className="focus-ring cursor-pointer list-none rounded-sm px-2 py-1 text-xs text-white">
+            <summary className="focus-ring inline-flex min-h-6 cursor-pointer list-none items-center rounded-sm px-2 py-1 text-xs text-white">
               Menu
             </summary>
             <div className="absolute left-0 right-0 top-11 border-b border-line bg-surface p-2">
@@ -89,7 +89,7 @@ export function Header() {
           </Link>
 
           <div className="flex items-center gap-5">
-            <Link href="/rates" className="focus-ring hidden rounded-sm text-sm text-ink sm:inline">
+            <Link href="/rates" className="focus-ring hidden min-h-6 items-center rounded-sm px-1 text-sm text-ink sm:inline-flex">
               How pricing works
             </Link>
             <Button asChild size="sm" className="rounded-full px-5">

@@ -23,6 +23,7 @@ export default function TermsPrivacyPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
       <SectionHeading
+        as="h1"
         eyebrow="Terms & Privacy"
         title="Clear expectations for directory use and profile publishing"
         description="This is sample production-ready page structure for legal content and privacy disclosures."

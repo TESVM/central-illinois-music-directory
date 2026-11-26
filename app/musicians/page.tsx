@@ -27,6 +27,7 @@ export default async function MusiciansPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <SectionHeading
+        as="h1"
         eyebrow="Browse Musicians"
         title="Search local musicians by instrument, worship style, and church fit"
         description="Profiles include church history, event experience, availability, and direct contact paths."

@@ -19,6 +19,7 @@ export default async function ContactPage({ searchParams }: Props) {
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
       <div>
         <SectionHeading
+          as="h1"
           eyebrow="Contact"
           title="Questions, partnerships, or launch interest"
           description="Use this page for ministry partnerships, musician onboarding questions, or accessibility feedback."

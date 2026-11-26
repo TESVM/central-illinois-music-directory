@@ -29,7 +29,18 @@ const config: Config = {
         // Text
         ink: "#1d1d1f",
         "ink-muted": "#333333",
-        "ink-subtle": "#7a7a7a",
+        /*
+         * DESIGN.md specifies #7a7a7a here, but it is documented there for
+         * disabled text and legal fine-print. This codebase also uses it for
+         * secondary body copy, hints, and the result-count live region, where
+         * it measured 3.94–4.29:1 — below the 4.5:1 that WCAG 2.2 AA (1.4.3
+         * Contrast Minimum) requires for normal-size text.
+         *
+         * #707070 is the lightest neutral that clears 4.5:1 on all three
+         * surfaces in use (white 4.95, canvas 4.55, pearl 4.75) so the muted
+         * look survives while the text stays readable.
+         */
+        "ink-subtle": "#707070",
 
         // Hairlines
         line: "#e0e0e0",

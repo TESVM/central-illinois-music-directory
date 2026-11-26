@@ -5,8 +5,8 @@ import { HeroSearch } from "@/components/site/hero-search";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/layout/section-heading";
-import { allListingsAreExamples, realMusicianCount } from "@/components/site/example-notice";
-import { FLOOR_RATE, formatCurrency } from "@/lib/rates";
+import { ExampleBadge, allListingsAreExamples, realMusicianCount } from "@/components/site/example-notice";
+import { FLOOR_RATE, enforceFloor, formatCurrency, formatRate } from "@/lib/rates";
 import { getFeaturedMusicians, instrumentPhotos, musicians, testimonials } from "@/lib/site-data";
 import { churchDirectoryUrl } from "@/lib/utils";
 
@@ -161,17 +161,35 @@ export default function HomePage() {
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
           {featuredMusicians.map((musician) => (
             <Card key={musician.slug} className="overflow-hidden rounded-[32px]">
-              <div className={`h-48 ${musician.accentClass} p-6 text-white`}>
-                <div
-                  role="img"
-                  aria-label={`${musician.name} profile portrait placeholder`}
-                  className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/30 bg-white/15 text-2xl font-semibold backdrop-blur"
-                >
-                  {musician.initials}
+              {/*
+                Was a teal-to-gold gradient with white text. At the light end
+                of that gradient white measured 1.63:1, far below the 4.5:1
+                WCAG 2.2 AA requires (1.4.3). Flattened to match the musician
+                browser cards, which DESIGN.md's no-decorative-gradients rule
+                already governs.
+              */}
+              <div className="border-b border-line-soft p-6">
+                <div className="flex items-center gap-4">
+                  <div
+                    role="img"
+                    aria-label={`${musician.name} profile portrait placeholder`}
+                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-pearl text-body font-semibold text-ink-muted ring-1 ring-line-soft"
+                  >
+                    {musician.initials}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-tagline font-semibold text-ink">{musician.name}</h3>
+                    <p className="text-sm text-ink-subtle">{musician.primaryRole}</p>
+                  </div>
                 </div>
-                <p className="mt-12 text-sm font-semibold uppercase tracking-[0.22em] text-white/80">{musician.city}</p>
-                <h3 className="mt-2 font-display text-3xl">{musician.name}</h3>
-                <p className="mt-1 text-sm text-white/85">{musician.primaryRole}</p>
+                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <span className="text-sm text-ink-muted">{musician.city}</span>
+                  <span aria-hidden="true" className="text-ink-subtle">·</span>
+                  <span className="text-body font-semibold text-ink">
+                    {formatRate(enforceFloor(musician.hourlyRate))}
+                  </span>
+                  {musician.example && <ExampleBadge />}
+                </div>
               </div>
               <div className="space-y-4 p-6">
                 <div className="flex flex-wrap gap-2 text-xs font-medium text-brand-900">
@@ -277,22 +295,32 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-[36px] bg-[linear-gradient(135deg,#12363e,#2f8f88_55%,#f28b66)] px-8 py-10 text-white shadow-soft sm:px-10">
+        {/*
+          Was a teal-to-coral gradient carrying white text, which fell to
+          ~2.6:1 at the coral end (WCAG 2.2 AA 1.4.3 needs 4.5:1). Switched to
+          the flat near-black tile the rest of the site uses, where white
+          measures 14.5:1. The outlined buttons also had to change: the
+          secondary variant is a blue ghost pill, which is unreadable on a dark
+          surface.
+        */}
+        <div className="rounded-lg bg-tile px-8 py-10 text-white sm:px-10">
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/80">For Musicians</p>
-            <h2 className="mt-4 font-display text-4xl">Create a profile that churches can trust at first glance.</h2>
-            <p className="mt-4 text-lg leading-8 text-white/88">
+            <p className="text-sm font-semibold text-white/80">For Musicians</p>
+            <h2 className="mt-4 text-display-md font-semibold">
+              Create a profile that churches can trust at first glance.
+            </h2>
+            <p className="mt-4 text-body leading-relaxed text-white/80">
               Share your background, ministry history, social links, and media in a format built for church hiring decisions.
             </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild variant="secondary">
+            <Button asChild>
               <Link href="/create-profile">Start your profile</Link>
             </Button>
-            <Button asChild className="bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20">
+            <Button asChild className="border border-white/40 bg-transparent text-white">
               <Link href="/request-musician">Request musicians for an event</Link>
             </Button>
-            <Button asChild className="bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20">
+            <Button asChild className="border border-white/40 bg-transparent text-white">
               <a href={churchDirectoryUrl("/")} target="_blank" rel="noreferrer">
                 Browse the church directory
               </a>

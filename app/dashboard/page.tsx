@@ -8,6 +8,7 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <SectionHeading
+        as="h1"
         eyebrow="Musician Dashboard"
         title={`Welcome back, ${profile.name}`}
         description="A sample dashboard showing how a musician can track profile activity, inquiries, and availability."

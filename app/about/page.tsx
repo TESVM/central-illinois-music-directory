@@ -11,6 +11,7 @@ export default function AboutPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
       <SectionHeading
+        as="h1"
         eyebrow="About"
         title="A local directory built for ministry planning, not generic booking"
         description="Central Illinois Music Ministry Directory is designed to help churches find capable, ministry-ready musicians while giving local artists a clear and professional public profile."

@@ -5,6 +5,7 @@ export default function CreateProfilePage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
       <SectionHeading
+        as="h1"
         eyebrow="Create Profile"
         title="Build a public profile that churches can review quickly"
         description="This multi-step form captures the details pastors and worship leaders usually ask for before they book someone."
