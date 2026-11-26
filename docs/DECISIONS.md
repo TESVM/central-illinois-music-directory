@@ -203,3 +203,50 @@ it. The same care applies to any future client component handed user records.
 **Why keep it:** it's a reasonable starting point for the eventual database
 work, and the church-side admin code references its types. Worth knowing it
 describes churches only — there is no Musician model yet.
+
+---
+
+## The database is optional, and reads fall back to the seed
+
+`lib/data/musicians.ts` serves from Postgres when `DATABASE_URL` is set and
+from the seeded array otherwise, including when a database query throws.
+
+**Why:** it let the database land without a flag day. The schema, migration,
+seed, and data layer could all ship and be verified while production still had
+no database, instead of waiting for provisioning and then switching everything
+at once. It also means a database outage degrades the directory to its last
+known content rather than to an error page.
+
+**When to remove it:** once production has run on a database long enough to
+trust, and the seeded array is no longer the source of truth for anyone. Until
+then, deleting the fallback turns a missing environment variable into a dead
+site.
+
+## Contact details are private until consented, per field
+
+Each musician row carries `showPhone`, `showEmail`, `showWhatsapp`, and
+`showSocials`, all defaulting to false.
+
+**Why per field and why default false:** a musician agreeing to be listed is
+not the same as agreeing to publish their mobile number. Defaulting to false
+means a profile created by an admin, imported, or half-finished cannot leak a
+detail nobody agreed to publish. Example rows never expose contact details at
+all, whatever their flags say, because the values are placeholders.
+
+This is the same boundary as `MusicianCard`: the UI should be incapable of
+showing what consent did not cover, rather than merely declining to render it.
+
+## Submissions are saved before the email is attempted
+
+`recordSubmission` runs before `sendGigNotification`, and the result is
+reported from the saved record.
+
+**Why this order:** the email used to be the only copy, so a provider outage
+lost the lead outright. Saving first makes delivery a separate, retryable
+concern — tracked in `notification`, `notifyAttempts`, and
+`notificationError` rather than conflated with whether the enquiry arrived.
+
+`dedupeKey` keeps repeat submits idempotent, so a double-click or a retry
+after a failed notification updates the existing row instead of creating a
+second lead. It deliberately does not reset `triage`: a staff member may
+already be working on it.

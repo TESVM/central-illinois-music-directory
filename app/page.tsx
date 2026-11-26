@@ -5,12 +5,12 @@ import { HeroSearch } from "@/components/site/hero-search";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/layout/section-heading";
-import { ExampleBadge, allListingsAreExamples, realMusicianCount } from "@/components/site/example-notice";
+import { ExampleBadge } from "@/components/site/example-notice";
+import { getDirectoryCounts, getFeaturedDirectoryMusicians } from "@/lib/data/musicians";
 import { FLOOR_RATE, enforceFloor, formatCurrency, formatRate } from "@/lib/rates";
-import { getFeaturedMusicians, instrumentPhotos, musicians, testimonials } from "@/lib/site-data";
+import { instrumentPhotos, testimonials } from "@/lib/site-data";
 import { churchDirectoryUrl } from "@/lib/utils";
 
-const featuredMusicians = getFeaturedMusicians();
 
 const quickLinks = [
   {
@@ -53,7 +53,11 @@ const steps = [
   }
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [featuredMusicians, counts] = await Promise.all([
+    getFeaturedDirectoryMusicians(3),
+    getDirectoryCounts()
+  ]);
   return (
     <div className="pb-20">
       <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:pt-16">
@@ -91,11 +95,11 @@ export default function HomePage() {
               cannot drift into being untrue as the directory grows.
             */}
             {[
-              allListingsAreExamples
+              counts.allExamples
                 ? ["New", "Directory launching — requests matched personally"]
-                : [`${realMusicianCount}`, "Vetted musicians, each profile reviewed"],
+                : [`${counts.real}`, "Vetted musicians, each profile reviewed"],
               [formatCurrency(FLOOR_RATE), "Minimum hourly rate, always"],
-              [`${new Set(musicians.map((musician) => musician.city)).size}`, "Cities across Central Illinois"]
+              [`${counts.cities}`, "Cities across Central Illinois"]
             ].map(([value, label]) => (
               <Card key={label} className="p-5">
                 <p className="text-2xl font-semibold text-ink">{value}</p>

@@ -203,3 +203,41 @@ downgraded `@types/node` to v20, which broke the typecheck; restored to v22.
 All seven remaining need major upgrades: zod 4, Next 16, Prisma 7. Only zod
 reaches attacker-facing shipped code, so every public input now has explicit
 length and array bounds as a compensating control.
+
+
+---
+
+## 2026-11-26 — Durable storage
+
+Uncommitted at time of writing. Built and verified against Postgres 16 in
+Docker; production has no `DATABASE_URL` yet.
+
+**Schema.** `Musician` and `FormSubmission` added alongside the church models,
+which are untouched — all 14 church tables survived the migration. Musicians
+carry `example`, a `PublicationState` of DRAFT / PUBLISHED / ARCHIVED, and
+per-field contact-publication consent (`showPhone`, `showEmail`,
+`showWhatsapp`, `showSocials`), each defaulting to false. A contact detail is
+private until the musician says otherwise.
+
+**Seed** migrates the six examples with `example: true` intact and every
+consent flag false, so the labelling rules survive the move off the array. It
+upserts, so re-running is safe.
+
+**Reads** go through `lib/data/musicians.ts`, which falls back to the seeded
+array when `DATABASE_URL` is absent or the database errors. That is what makes
+this shippable before provisioning: verified by building and running with the
+variable removed, where every page returned 200 with identical content.
+
+**Writes.** All four submissions are now saved *before* the notification email
+is attempted, so a provider outage is a retry problem rather than a lost lead.
+`notification`, `notifyAttempts`, and `notificationError` track delivery
+separately from receipt. A `dedupeKey` makes repeat submits idempotent —
+verified: an identical resubmit left one row and incremented attempts to 2.
+
+**Reporting flipped accordingly.** With storage, a saved submission is a
+confirmed receipt and an email failure is a footnote. Without storage, the
+previous delivery-gated failure message still applies. Both paths verified.
+
+**Verified end to end:** changing `hourlyRate` with SQL changed the browse
+page on the next request, with no code edit and no redeploy — the point of
+the exercise.

@@ -59,9 +59,9 @@ model City {
 }
 
 model Church {
-  id               String            @id @default(cuid())
+  id               String             @id @default(cuid())
   name             String
-  slug             String            @unique
+  slug             String             @unique
   cityId           String
   denomination     String?
   description      String?
@@ -77,16 +77,16 @@ model Church {
   livestreamUrl    String?
   logoUrl          String?
   featuredImageUrl String?
-  seniorPastorId   String?           @unique
-  verified         Boolean           @default(false)
-  claimed          Boolean           @default(false)
+  seniorPastorId   String?            @unique
+  verified         Boolean            @default(false)
+  claimed          Boolean            @default(false)
   lastScannedAt    DateTime?
   lastUpdatedAt    DateTime?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  cityRecord       City              @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  seniorPastor     Pastor?           @relation("SeniorPastor", fields: [seniorPastorId], references: [id])
-  leaders          Pastor[]          @relation("ChurchLeaders")
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  cityRecord       City               @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  seniorPastor     Pastor?            @relation("SeniorPastor", fields: [seniorPastorId], references: [id])
+  leaders          Pastor[]           @relation("ChurchLeaders")
   ministries       Ministry[]
   serviceTimes     ServiceTime[]
   socialLinks      SocialLink[]
@@ -174,14 +174,14 @@ model Submission {
 }
 
 model User {
-  id             String            @id @default(cuid())
-  name           String?
-  email          String            @unique
-  role           UserRole          @default(EDITOR)
-  memberships    ChurchMembership[]
-  claimRequests  ClaimRequest[]
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id            String             @id @default(cuid())
+  name          String?
+  email         String             @unique
+  role          UserRole           @default(EDITOR)
+  memberships   ChurchMembership[]
+  claimRequests ClaimRequest[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 }
 
 model ClaimRequest {
@@ -204,16 +204,16 @@ model ClaimRequest {
 }
 
 model ChurchMembership {
-  id         String           @id @default(cuid())
-  churchId    String
-  userId      String
-  role       UserRole
-  status     MembershipStatus @default(PENDING)
-  grantedAt  DateTime?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  church     Church           @relation(fields: [churchId], references: [id], onDelete: Cascade)
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String           @id @default(cuid())
+  churchId  String
+  userId    String
+  role      UserRole
+  status    MembershipStatus @default(PENDING)
+  grantedAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  church    Church           @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([churchId, userId])
 }
@@ -230,10 +230,146 @@ model SiteContent {
 
 model UpdateLog {
   id          String   @id @default(cuid())
-  churchId     String
+  churchId    String
   action      String
   details     String?
   performedBy String?
   createdAt   DateTime @default(now())
   church      Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Musician directory
+//
+// Added alongside the church directory above, which is untouched. Musicians
+// previously lived in lib/site-data.ts as a hardcoded array, so adding one
+// meant editing code and redeploying.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum PublicationState {
+  /// Submitted, not yet reviewed. Never shown publicly.
+  DRAFT
+  /// Reviewed and live in the directory.
+  PUBLISHED
+  /// Withdrawn or rejected. Kept for history, never shown publicly.
+  ARCHIVED
+}
+
+model Musician {
+  id               String  @id @default(cuid())
+  slug             String  @unique
+  name             String
+  initials         String
+  primaryRole      String
+  city             String
+  yearsExperience  Int
+  churchExperience String?
+  shortBio         String
+  bio              String
+
+  /// Never below FLOOR_RATE. Enforced in lib/rates.ts on the way in and out.
+  hourlyRate Int
+
+  instruments  String[]
+  genres       String[]
+  churchTypes  String[]
+  churches     String[]
+  events       String[]
+  media        String[]
+  availability String
+
+  /// Contact details. Published only when the musician has consented to each
+  /// one; see the show* flags below. Never sent to a client component — the
+  /// browse page receives a projection (lib/site-data.ts, MusicianCard).
+  phone     String?
+  email     String?
+  whatsapp  String?
+  facebook  String?
+  instagram String?
+  linkedin  String?
+
+  /// Per-field publication consent. Default false: a detail is private until
+  /// the musician says otherwise.
+  showPhone    Boolean @default(false)
+  showEmail    Boolean @default(false)
+  showWhatsapp Boolean @default(false)
+  showSocials  Boolean @default(false)
+
+  /// Sample listing, not a real person. Drives the "Example listing" labels.
+  example  Boolean          @default(false)
+  state    PublicationState @default(DRAFT)
+  featured Boolean          @default(false)
+
+  distanceMiles Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([state, example])
+  @@index([city])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Submissions
+//
+// Every public form writes here BEFORE the notification email is attempted, so
+// a provider outage can no longer lose a lead. Notification state is tracked
+// separately from receipt.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum NotificationState {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum SubmissionKind {
+  CONTACT
+  MUSICIAN_PROFILE
+  CHURCH_LISTING
+  GIG_REQUEST
+}
+
+enum TriageState {
+  NEW
+  IN_PROGRESS
+  REPLIED
+  CLOSED
+}
+
+model FormSubmission {
+  id   String         @id @default(cuid())
+  kind SubmissionKind
+
+  /// Stable hash of the submitted content. A duplicate submit (double-click,
+  /// retry after a failed notification) updates the existing row instead of
+  /// creating a second lead.
+  dedupeKey String @unique
+
+  /// Who sent it, for replies and for the broker queue.
+  contactName  String
+  contactEmail String
+  organization String?
+
+  /// The full submitted payload, shape depending on `kind`.
+  payload Json
+
+  /// Rendered summary, so the broker queue can show a request without
+  /// re-deriving it from the payload.
+  summary String
+
+  notification      NotificationState @default(PENDING)
+  notificationError String?
+  notifiedAt        DateTime?
+  /// Number of delivery attempts, so retries are visible rather than silent.
+  notifyAttempts    Int               @default(0)
+
+  triage    TriageState @default(NEW)
+  staffNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, triage])
+  @@index([notification])
+  @@index([createdAt])
 }

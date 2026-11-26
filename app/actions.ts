@@ -15,6 +15,7 @@ import { getPlan, type PlanId } from "@/lib/plans";
 import { computeQuote, enforceFloor, quoteToPlainText } from "@/lib/rates";
 import { sendGigNotification } from "@/lib/notify";
 import { checkRateLimit, describeRetry } from "@/lib/rate-limit";
+import { recordNotificationResult, recordSubmission } from "@/lib/data/submissions";
 import {
   createPersistedClaimRequest,
   reviewPersistedClaimRequest,
@@ -73,10 +74,24 @@ async function guardRate(action: keyof typeof LIMITS): Promise<FormResult | null
 function deliveryOutcome(
   delivery: Awaited<ReturnType<typeof sendGigNotification>>,
   successMessage: string,
-  whatWasSent: string
+  whatWasSent: string,
+  stored = false
 ): FormResult {
   if (delivery.delivered) {
     return { status: "success", message: successMessage, delivered: true };
+  }
+
+  /*
+   * Once the submission is saved, receipt is a fact independent of email.
+   * Reporting failure then would be wrong in the other direction — the
+   * enquiry is safely recorded and someone will see it in the queue.
+   */
+  if (stored) {
+    return {
+      status: "success",
+      message: `${successMessage} (Our email notification is having trouble, so if you don't hear back within a day, email ${CONTACT_EMAIL}.)`,
+      delivered: false
+    };
   }
 
   const because =
@@ -148,6 +163,26 @@ export async function submitContactAction(
     })
   );
 
+  const contactSummary = [
+    `From: ${name} <${email}>`,
+    organization ? `Organization: ${organization}` : "",
+    interestedPlan ? `Interested in: ${interestedPlan.name} (${interestedPlan.id})` : "",
+    "",
+    parsed.data.message
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  // Saved before the email is attempted, so a provider outage cannot lose it.
+  const record = await recordSubmission({
+    kind: "CONTACT",
+    contactName: name,
+    contactEmail: email,
+    organization,
+    payload: { ...parsed.data, organization, interest: interestedPlan?.id },
+    summary: contactSummary
+  });
+
   const delivery = await sendGigNotification({
     subject: interestedPlan
       ? `Membership interest (${interestedPlan.name}) — ${name}`
@@ -164,10 +199,18 @@ export async function submitContactAction(
     replyTo: email
   });
 
+  if (record.stored) {
+    await recordNotificationResult(record.id, {
+      delivered: delivery.delivered,
+      detail: delivery.delivered ? undefined : delivery.reason
+    });
+  }
+
   return deliveryOutcome(
     delivery,
     "Thanks — your message is on its way. We'll reply to the email you gave us.",
-    "your message"
+    "your message",
+    record.stored
   );
 }
 
@@ -199,6 +242,20 @@ export async function submitMusicianProfileAction(
     JSON.stringify({ receivedAt: new Date().toISOString(), ...profile })
   );
 
+  const profileSummary = [
+    `${profile.fullName} — ${profile.primaryRole}, ${profile.city}`,
+    `${profile.yearsExperience} years · ${profile.genres}`,
+    `Reply to: ${profile.email}`
+  ].join("\n");
+
+  const record = await recordSubmission({
+    kind: "MUSICIAN_PROFILE",
+    contactName: profile.fullName,
+    contactEmail: profile.email,
+    payload: profile,
+    summary: profileSummary
+  });
+
   const delivery = await sendGigNotification({
     subject: `New musician profile — ${profile.fullName}`,
     body: [
@@ -224,10 +281,18 @@ export async function submitMusicianProfileAction(
     replyTo: profile.email
   });
 
+  if (record.stored) {
+    await recordNotificationResult(record.id, {
+      delivered: delivery.delivered,
+      detail: delivery.delivered ? undefined : delivery.reason
+    });
+  }
+
   return deliveryOutcome(
     delivery,
     "Profile received. We'll review it and get in touch before it goes live.",
-    "your profile"
+    "your profile",
+    record.stored
   );
 }
 
@@ -275,6 +340,21 @@ export async function submitListingAction(
     JSON.stringify({ receivedAt: new Date().toISOString(), ...listing })
   );
 
+  const listingSummary = [
+    `${listing.churchName}, ${listing.city}`,
+    `Pastor ${listing.seniorPastor} · ${listing.serviceTimes}`,
+    `Submitted by ${listing.contactName} <${listing.contactEmail}>`
+  ].join("\n");
+
+  const record = await recordSubmission({
+    kind: "CHURCH_LISTING",
+    contactName: listing.contactName,
+    contactEmail: listing.contactEmail,
+    organization: listing.churchName,
+    payload: listing,
+    summary: listingSummary
+  });
+
   const delivery = await sendGigNotification({
     subject: `Church listing submitted — ${listing.churchName}`,
     body: [
@@ -293,10 +373,18 @@ export async function submitListingAction(
     replyTo: listing.contactEmail
   });
 
+  if (record.stored) {
+    await recordNotificationResult(record.id, {
+      delivered: delivery.delivered,
+      detail: delivery.delivered ? undefined : delivery.reason
+    });
+  }
+
   return deliveryOutcome(
     delivery,
     "Listing received. We'll review it before it appears in the directory.",
-    "your listing"
+    "your listing",
+    record.stored
   );
 }
 
@@ -378,16 +466,34 @@ export async function submitGigRequestAction(
     .filter(Boolean)
     .join("\n");
 
+  const record = await recordSubmission({
+    kind: "GIG_REQUEST",
+    contactName: payload.contactName,
+    contactEmail: payload.contactEmail,
+    organization: payload.organization,
+    payload: { ...payload, quote },
+    summary
+  });
+
   const delivery = await sendGigNotification({
     subject: `Musician request — ${payload.organization} (${payload.eventDate})`,
     body: summary,
     replyTo: payload.contactEmail
   });
 
+  if (record.stored) {
+    await recordNotificationResult(record.id, {
+      delivered: delivery.delivered,
+      detail: delivery.delivered ? undefined : delivery.reason
+    });
+  }
+
   // Nothing is stored yet, so an undelivered notification means the request is
   // gone. Reporting success here would tell a church we had their booking when
   // we did not.
-  if (!delivery.delivered) {
+  // Stored requests are safe even if the notification failed; unstored ones
+  // only existed in that email.
+  if (!delivery.delivered && !record.stored) {
     return {
       ok: false,
       message:

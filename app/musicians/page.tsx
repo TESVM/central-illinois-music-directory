@@ -1,6 +1,6 @@
 import { SectionHeading } from "@/components/layout/section-heading";
 import { MusicianBrowser } from "@/components/site/musician-browser";
-import { getMusicianCards } from "@/lib/site-data";
+import { getDirectoryCards, getDirectoryCounts } from "@/lib/data/musicians";
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -24,6 +24,8 @@ export default async function MusiciansPage({ searchParams }: Props) {
     initialFilters[key] = typeof value === "string" ? value : "";
   });
 
+  const [cards, counts] = await Promise.all([getDirectoryCards(), getDirectoryCounts()]);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <SectionHeading
@@ -41,7 +43,11 @@ export default async function MusiciansPage({ searchParams }: Props) {
         </ol>
       </div>
       <div className="mt-10">
-        <MusicianBrowser musicians={getMusicianCards()} initialFilters={initialFilters} />
+        <MusicianBrowser
+          musicians={cards}
+          allExamples={counts.allExamples}
+          initialFilters={initialFilters}
+        />
       </div>
     </div>
   );

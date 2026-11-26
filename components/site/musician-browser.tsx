@@ -11,6 +11,8 @@ import type { MusicianCard } from "@/lib/site-data";
 
 type Props = {
   musicians: MusicianCard[];
+  /** True when every published listing is sample data. */
+  allExamples: boolean;
   initialFilters: Record<FilterKey, string>;
 };
 
@@ -31,7 +33,7 @@ function matchesExperience(musician: MusicianCard, value: string) {
   return musician.yearsExperience >= years;
 }
 
-export function MusicianBrowser({ musicians, initialFilters }: Props) {
+export function MusicianBrowser({ musicians, initialFilters, allExamples }: Props) {
   const [sort, setSort] = useState("newest");
   const [filters, setFilters] = useState(initialFilters);
 
@@ -104,7 +106,7 @@ export function MusicianBrowser({ musicians, initialFilters }: Props) {
       </Card>
 
       <section aria-labelledby="results-heading">
-        <ExampleNotice className="mb-5" />
+        <ExampleNotice show={allExamples} className="mb-5" />
 
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <p id="results-heading" aria-live="polite" className="text-sm text-ink-subtle">

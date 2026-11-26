@@ -7,19 +7,24 @@ import { ExampleBadge, ExampleNotice } from "@/components/site/example-notice";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { enforceFloor, formatRate, isFloorRate } from "@/lib/rates";
-import { getMusicianBySlug, instrumentPhotos, musicians } from "@/lib/site-data";
+import { instrumentPhotos } from "@/lib/site-data";
+import {
+  getDirectoryMusicianBySlug,
+  getDirectoryMusicians
+} from "@/lib/data/musicians";
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
 export async function generateStaticParams() {
-  return musicians.map((musician) => ({ slug: musician.slug }));
+  const all = await getDirectoryMusicians();
+  return all.map((musician) => ({ slug: musician.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const musician = getMusicianBySlug(slug);
+  const musician = await getDirectoryMusicianBySlug(slug);
   return {
     title: musician ? musician.name : "Musician profile",
     description: musician?.shortBio
@@ -28,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function MusicianProfilePage({ params }: Props) {
   const { slug } = await params;
-  const musician = getMusicianBySlug(slug);
+  const musician = await getDirectoryMusicianBySlug(slug);
 
   if (!musician) {
     notFound();
@@ -71,7 +76,7 @@ export default async function MusicianProfilePage({ params }: Props) {
           */}
           {musician.example ? (
             <>
-              <ExampleNotice className="mt-8" />
+              <ExampleNotice show className="mt-8" />
               <div className="mt-5">
                 <Button asChild>
                   <Link href="/request-musician">Tell us what you need</Link>
@@ -83,9 +88,12 @@ export default async function MusicianProfilePage({ params }: Props) {
               <Button asChild>
                 <Link href="/request-musician">Request this musician</Link>
               </Button>
-              <Button asChild variant="secondary">
-                <Link href={`mailto:${musician.email}`}>Contact by email</Link>
-              </Button>
+              {/* Only offered when this musician agreed to publish their email. */}
+              {musician.contact.email && (
+                <Button asChild variant="secondary">
+                  <Link href={`mailto:${musician.contact.email}`}>Contact by email</Link>
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -171,14 +179,26 @@ export default async function MusicianProfilePage({ params }: Props) {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-start gap-3">
-                      <Phone className="mt-1 h-4 w-4 text-brand-700" />
-                      <span>{musician.phone}</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <Mail className="mt-1 h-4 w-4 text-brand-700" />
-                      <span>{musician.email}</span>
-                    </div>
+                    {musician.contact.phone && (
+                      <div className="flex items-start gap-3">
+                        <Phone className="mt-1 h-4 w-4 text-brand-700" />
+                        <span>{musician.contact.phone}</span>
+                      </div>
+                    )}
+                    {musician.contact.email && (
+                      <div className="flex items-start gap-3">
+                        <Mail className="mt-1 h-4 w-4 text-brand-700" />
+                        <span>{musician.contact.email}</span>
+                      </div>
+                    )}
+                    {!musician.contact.phone && !musician.contact.email && (
+                      <div className="flex items-start gap-3">
+                        <Mail className="mt-1 h-4 w-4 text-ink-subtle" />
+                        <span className="text-ink-subtle">
+                          This musician prefers to be reached through a request.
+                        </span>
+                      </div>
+                    )}
                   </>
                 )}
                 <p><strong>Availability:</strong> {musician.availability}</p>
@@ -187,15 +207,29 @@ export default async function MusicianProfilePage({ params }: Props) {
               </div>
             </Card>
 
-            {/* Sample profiles carry placeholder social URLs that resolve to nothing. */}
-            {!musician.example && (
+            {/*
+              Each link appears only if the musician agreed to publish their
+              socials; the consent filter lives in lib/data/musicians.ts.
+            */}
+            {(musician.contact.facebook ||
+              musician.contact.instagram ||
+              musician.contact.linkedin ||
+              musician.contact.whatsapp) && (
               <Card className="p-6">
                 <h2 className="text-tagline font-semibold text-ink">Social links</h2>
                 <div className="mt-5 space-y-3 text-sm text-brand-700">
-                  <a className="block underline-offset-4 hover:underline focus-ring" href={musician.facebook}>Facebook</a>
-                  <a className="block underline-offset-4 hover:underline focus-ring" href={musician.instagram}>Instagram</a>
-                  <a className="block underline-offset-4 hover:underline focus-ring" href={musician.linkedin}>LinkedIn</a>
-                  <a className="block underline-offset-4 hover:underline focus-ring" href={`https://wa.me/${musician.whatsapp.replace(/\D/g, "")}`}>WhatsApp</a>
+                  {musician.contact.facebook && (
+                    <a className="block underline-offset-4 hover:underline focus-ring" href={musician.contact.facebook}>Facebook</a>
+                  )}
+                  {musician.contact.instagram && (
+                    <a className="block underline-offset-4 hover:underline focus-ring" href={musician.contact.instagram}>Instagram</a>
+                  )}
+                  {musician.contact.linkedin && (
+                    <a className="block underline-offset-4 hover:underline focus-ring" href={musician.contact.linkedin}>LinkedIn</a>
+                  )}
+                  {musician.contact.whatsapp && (
+                    <a className="block underline-offset-4 hover:underline focus-ring" href={`https://wa.me/${musician.contact.whatsapp.replace(/\D/g, "")}`}>WhatsApp</a>
+                  )}
                 </div>
               </Card>
             )}

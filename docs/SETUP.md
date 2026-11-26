@@ -28,6 +28,62 @@ just won't email anyone.
 which breaks the running site in a confusing way — the page renders with no
 CSS at all. If that happens: stop the server, `rm -rf .next`, restart.
 
+## Database
+
+Optional. The site runs without one, serving the seeded musicians from
+`lib/site-data.ts`. With a database, musicians are editable without a deploy
+and every submission is stored before its notification email is attempted.
+
+### Local development
+
+```bash
+docker run -d --name ciid-postgres -e POSTGRES_PASSWORD=devpassword -e POSTGRES_USER=postgres -e POSTGRES_DB=ciid_dev -p 55432:5432 postgres:16-alpine
+```
+
+Port 55432 avoids clashing with any Postgres already on 5432. Then put this in
+`.env.local` (gitignored):
+
+```
+DATABASE_URL="postgresql://postgres:devpassword@localhost:55432/ciid_dev"
+```
+
+Apply the schema and seed:
+
+```bash
+npx prisma migrate dev
+```
+
+```bash
+npx tsx prisma/seed.ts
+```
+
+The seed is idempotent — it upserts, so re-running is safe. It preserves
+`example: true` on all six sample musicians and leaves every contact-consent
+flag false.
+
+### Production
+
+Vercel Postgres or Neon; both have free tiers. Set `DATABASE_URL` in Vercel,
+then apply migrations against it:
+
+```bash
+npx prisma migrate deploy
+```
+
+Run that with the production `DATABASE_URL` in your shell, not committed.
+`migrate deploy` only applies existing migrations and never generates or
+resets, which is what you want against real data.
+
+### Editing musicians without a deploy
+
+Once the database is live, a musician is a row. Changing a rate, publishing a
+profile, or granting contact-publication consent is a `UPDATE`, visible on the
+next request — verified locally by changing `hourlyRate` in SQL and seeing the
+browse page follow without a rebuild.
+
+Publication state is `DRAFT`, `PUBLISHED`, or `ARCHIVED`; only `PUBLISHED`
+rows appear publicly.
+
 ## Environment variables
 
 None are currently set in production. Nothing crashes without them; features

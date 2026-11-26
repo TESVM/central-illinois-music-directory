@@ -86,7 +86,7 @@ count automatically. This is a phone call, not a coding task.
 
 | Thing | Consequence |
 |---|---|
-| Database | Musicians live in `lib/site-data.ts`. Adding one means editing code and redeploying. |
+| Database (production) | Schema, migration, seed, and data layer are built and verified against Postgres locally. Production has no `DATABASE_URL` yet, so the live site still serves the seeded array. |
 | Working login | No `NEXTAUTH_SECRET` is set, so authentication cannot function. Admin and dashboard are unreachable. |
 | Subscription billing | `BILLING_LIVE` is `false`. Paid plans register interest via the contact form instead of taking payment. |
 | Entitlements | Nothing checks what tier a user is on, because there are no users. |

@@ -1,18 +1,22 @@
 import { BadgeCheck, HandCoins, MapPin, ShieldCheck } from "lucide-react";
-import { allListingsAreExamples, realMusicianCount } from "@/components/site/example-notice";
+import { getDirectoryCounts, getDirectoryMusicians } from "@/lib/data/musicians";
 import { FLOOR_RATE, formatCurrency } from "@/lib/rates";
-import { musicians } from "@/lib/site-data";
 
 /**
  * Credibility markers. Every claim here is one the site can actually back up —
  * the counts are derived from real data rather than typed in, so they can't
  * drift out of date and become a lie.
  */
-export function TrustStrip() {
+export async function TrustStrip() {
+  const musicians = await getDirectoryMusicians();
+  const counts = await getDirectoryCounts();
   const cities = new Set(musicians.map((musician) => musician.city));
-  const averageYears = Math.round(
-    musicians.reduce((total, musician) => total + musician.yearsExperience, 0) / musicians.length
-  );
+  const averageYears = musicians.length
+    ? Math.round(
+        musicians.reduce((total, musician) => total + musician.yearsExperience, 0) /
+          musicians.length
+      )
+    : 0;
 
   const points = [
     /*
@@ -20,7 +24,7 @@ export function TrustStrip() {
       roster that does not exist. It switches to the real claim automatically
       once an actual musician is added.
     */
-    allListingsAreExamples
+    counts.allExamples
       ? {
           icon: BadgeCheck,
           title: "Personally matched",
@@ -28,7 +32,7 @@ export function TrustStrip() {
         }
       : {
           icon: BadgeCheck,
-          title: `${realMusicianCount} vetted musicians`,
+          title: `${counts.real} vetted musicians`,
           body: `Every profile is reviewed before it goes live. Average ${averageYears} years of ministry experience.`
         },
     {

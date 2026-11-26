@@ -1,12 +1,12 @@
 import type { MetadataRoute } from "next";
-import { musicians } from "@/lib/site-data";
+import { getDirectoryMusicians } from "@/lib/data/musicians";
 import { absoluteUrl } from "@/lib/utils";
 
 /**
  * Public pages only. Admin and authenticated routes are deliberately excluded
  * here and disallowed in robots.ts.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes: Array<[string, number]> = [
     ["", 1],
     ["/musicians", 0.9],
@@ -26,6 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority
   }));
 
+  const musicians = await getDirectoryMusicians();
   const musicianRoutes = musicians.map((musician) => ({
     url: absoluteUrl(`/musicians/${musician.slug}`),
     lastModified: new Date(musician.updatedAt),

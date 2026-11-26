@@ -1,10 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/layout/section-heading";
-import { musicians } from "@/lib/site-data";
+import { getDirectoryMusicians } from "@/lib/data/musicians";
 
-const profile = musicians[0];
 
-export default function DashboardPage() {
+
+export default async function DashboardPage() {
+  const musicians = await getDirectoryMusicians();
+  const profile = musicians[0];
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <SectionHeading

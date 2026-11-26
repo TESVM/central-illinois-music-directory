@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { churches, countyCities } from "@/lib/data/mock";
 import { adminUsers, churchMemberships, claimRequests, siteContent } from "@/lib/data/access";
+import { musicians } from "@/lib/site-data";
+import { enforceFloor } from "@/lib/rates";
 
 const prisma = new PrismaClient();
 
@@ -231,6 +233,52 @@ async function main() {
       }
     });
   }
+  // ── Musicians ────────────────────────────────────────────────────────────
+  //
+  // Seeds the six sample listings with `example: true` preserved, so the
+  // honest-labeling rules keep working after the move off the static array.
+  // Their contact details stay unpublished: every show* flag defaults to
+  // false, and placeholders must never be presented as reachable.
+  for (const musician of musicians) {
+    const shared = {
+      name: musician.name,
+      initials: musician.initials,
+      primaryRole: musician.primaryRole,
+      city: musician.city,
+      yearsExperience: musician.yearsExperience,
+      churchExperience: musician.churchExperience,
+      shortBio: musician.shortBio,
+      bio: musician.bio,
+      hourlyRate: enforceFloor(musician.hourlyRate),
+      instruments: musician.instruments,
+      genres: musician.genres,
+      churchTypes: musician.churchTypes,
+      churches: musician.churches,
+      events: musician.events,
+      media: musician.media,
+      availability: musician.availability,
+      phone: musician.phone,
+      email: musician.email,
+      whatsapp: musician.whatsapp,
+      facebook: musician.facebook,
+      instagram: musician.instagram,
+      linkedin: musician.linkedin,
+      example: musician.example ?? false,
+      featured: musician.featured ?? false,
+      distanceMiles: musician.distanceMiles,
+      state: "PUBLISHED" as const
+    };
+
+    await prisma.musician.upsert({
+      where: { slug: musician.slug },
+      update: shared,
+      create: { slug: musician.slug, ...shared }
+    });
+  }
+
+  const seeded = await prisma.musician.count();
+  const examples = await prisma.musician.count({ where: { example: true } });
+  console.log(`Seeded ${seeded} musicians (${examples} labelled as examples).`);
 }
 
 main()

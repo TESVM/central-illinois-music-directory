@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Info } from "lucide-react";
-import { musicians } from "@/lib/site-data";
 
-/** Real listings are anything not flagged as sample data. */
-export const realMusicianCount = musicians.filter((musician) => !musician.example).length;
-export const exampleMusicianCount = musicians.filter((musician) => musician.example).length;
-export const allListingsAreExamples = realMusicianCount === 0 && exampleMusicianCount > 0;
+/*
+ * These used to be module-level constants computed from the hardcoded array.
+ * Now that musicians come from the database, the count is only knowable at
+ * request time, so callers fetch it (lib/data/musicians.ts, getDirectoryCounts)
+ * and pass it in.
+ */
 
 /**
  * Shown wherever sample listings are visible.
@@ -14,8 +15,15 @@ export const allListingsAreExamples = realMusicianCount === 0 && exampleMusician
  * phone numbers. Presenting them without a label would mean a church emailing
  * someone who does not exist.
  */
-export function ExampleNotice({ className = "" }: { className?: string }) {
-  if (!allListingsAreExamples) return null;
+export function ExampleNotice({
+  show,
+  className = ""
+}: {
+  /** True when every published listing is sample data. */
+  show: boolean;
+  className?: string;
+}) {
+  if (!show) return null;
 
   return (
     <div
